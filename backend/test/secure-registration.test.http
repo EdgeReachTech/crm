@@ -1,0 +1,50 @@
+### Test Secure Registration
+POST http://localhost:3001/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "SecurePass123!",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+### Test Admin Approval (First login as admin)
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "fiacrepcc@gmail.com",
+  "password": "SecureAdminPass123!"
+}
+
+### Get Pending Users (Admin only)
+GET http://localhost:3001/api/auth/pending-users
+Authorization: Bearer {{adminToken}}
+
+### Approve User (Admin only)
+POST http://localhost:3001/api/auth/approve-user
+Content-Type: application/json
+Authorization: Bearer {{adminToken}}
+
+{
+  "userId": "{{pendingUserId}}"
+}
+
+### Test Login Before Approval (Should fail)
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "SecurePass123!"
+}
+
+### Test Login After Approval (Should succeed)
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "SecurePass123!"
+}
