@@ -370,14 +370,14 @@ export class AuthController {
     }
   };
 
-  // Admin-only methods for user management
+  // Manager-only methods for user management
   approveUser = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
+      const managerUid = (req as any).user?.uid;
       const { userId } = req.params;
       const { role } = req.body;
 
-      const user = await this.authService.approveUser(adminUid, userId, role);
+      const user = await this.authService.approveUser(managerUid, userId, role);
       
       res.status(200).json({ 
         status: 'success',
@@ -404,8 +404,8 @@ export class AuthController {
 
   getPendingUsers = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
-      const pendingUsers = await this.authService.getPendingUsers(adminUid);
+      const managerUid = (req as any).user?.uid;
+      const pendingUsers = await this.authService.getPendingUsers(managerUid);
       
       res.status(200).json({ 
         status: 'success',
@@ -431,11 +431,11 @@ export class AuthController {
 
   rejectUser = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
+      const managerUid = (req as any).user?.uid;
       const { userId } = req.params;
       const { reason } = req.body;
 
-      const result = await this.authService.rejectUser(adminUid, userId, reason);
+      const result = await this.authService.rejectUser(managerUid, userId, reason);
       
       res.status(200).json({ 
         status: 'success',
@@ -462,8 +462,8 @@ export class AuthController {
 
   getAllUsers = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
-      const allUsers = await this.authService.getAllUsers(adminUid);
+      const managerUid = (req as any).user?.uid;
+      const allUsers = await this.authService.getAllUsers(managerUid);
       
       res.status(200).json({
         status: 'success',
@@ -489,7 +489,7 @@ export class AuthController {
 
   getUsersByStatus = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
+      const managerUid = (req as any).user?.uid;
       const { status } = req.query;
       
       if (!status || !['active', 'inactive', 'pending'].includes(status as string)) {
@@ -501,7 +501,7 @@ export class AuthController {
         return;
       }
       
-      const users = await this.authService.getUsersByStatus(adminUid, status as string);
+      const users = await this.authService.getUsersByStatus(managerUid, status as string);
       
       res.status(200).json({
         status: 'success',
@@ -527,7 +527,7 @@ export class AuthController {
 
   updateUserStatus = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
+      const managerUid = (req as any).user?.uid;
       const { userId } = req.params;
       const { status } = req.body;
       
@@ -540,7 +540,7 @@ export class AuthController {
         return;
       }
       
-      const user = await this.authService.updateUserStatus(adminUid, userId, status);
+      const user = await this.authService.updateUserStatus(managerUid, userId, status);
       
       res.status(200).json({
         status: 'success',
@@ -567,20 +567,20 @@ export class AuthController {
 
   updateUserRole = async (req: Request, res: Response) => {
     try {
-      const adminUid = (req as any).user?.uid;
+      const managerUid = (req as any).user?.uid;
       const { userId } = req.params;
       const { role } = req.body;
       
-      if (!role || !['admin', 'manager', 'sales_rep', 'marketer'].includes(role)) {
+      if (!role || !['manager', 'sales_rep'].includes(role)) {
         res.status(400).json({
           status: 'error',
           code: 'INVALID_ROLE',
-          message: 'Invalid role. Must be one of: admin, manager, sales_rep, marketer'
+          message: 'Invalid role. Must be one of: manager, sales_rep'
         });
         return;
       }
       
-      const user = await this.authService.updateUserRole(adminUid, userId, role);
+      const user = await this.authService.updateUserRole(managerUid, userId, role);
       
       res.status(200).json({
         status: 'success',

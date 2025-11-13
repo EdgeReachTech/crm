@@ -19,13 +19,13 @@ const auth = {
     return {
       uid: 'mock-uid',
       email: 'test@example.com',
-      role: 'admin',
+      role: 'manager',
       tenant_id: 'mock-tenant-id',
     } as any;
   }),
   getUserByEmail: jest.fn().mockImplementation(async (email: string) => {
     if (email === 'test@example.com') {
-      return { uid: 'mock-uid', email, customClaims: { role: 'admin', tenant_id: 'mock-tenant-id' } } as any;
+      return { uid: 'mock-uid', email, customClaims: { role: 'manager', tenant_id: 'mock-tenant-id' } } as any;
     }
     const err: any = new Error('User not found');
     err.code = 'auth/user-not-found';

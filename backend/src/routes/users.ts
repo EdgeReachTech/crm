@@ -11,14 +11,14 @@ router.use(authMiddleware);
 // Routes restricted to admin and manager roles
 router.get('/', 
   requireSameTenant,
-  requireRole(['admin', 'manager']),
+  requireRole(['manager']),
   UserController.listUsersValidation,
   (req: Request, res: Response) => userController.listUsers(req, res)
 );
 
 router.get('/search', 
   requireSameTenant,
-  requireRole(['admin', 'manager']),
+  requireRole(['manager']),
   UserController.searchUsersValidation,
   (req: Request, res: Response) => userController.searchUsers(req, res)
 );
@@ -32,13 +32,13 @@ router.get('/:id',
 
 router.put('/:id', 
   requireSameTenant,
-  requireRole(['admin']),
+  requireRole(['manager']),
   (req: Request, res: Response) => userController.updateUser(req, res)
 );
 
 router.delete('/:id', 
   requireSameTenant,
-  requireRole(['admin']),
+  requireRole(['manager']),
   UserController.getUserValidation,
   (req: Request, res: Response) => userController.deleteUser(req, res)
 );

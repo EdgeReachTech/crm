@@ -35,7 +35,7 @@ router.put('/:id',
 
 router.delete('/:id', 
   requireSameTenant,
-  requireRole(['admin', 'manager']),
+  requireRole(['manager']),
   OpportunityController.getOpportunityValidation,
   (req: Request, res: Response) => opportunityController.deleteOpportunity(req, res)
 );
@@ -49,7 +49,7 @@ router.patch('/:id/stage',
 
 router.get('/forecast',
   requireSameTenant,
-  requireRole(['admin', 'manager']),
+  requireRole(['manager']),
   (req: Request, res: Response) => opportunityController.getForecast(req, res)
 );
 

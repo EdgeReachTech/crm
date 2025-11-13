@@ -14,7 +14,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'admin' | 'manager' | 'sales_rep' | 'marketer';
+  role: 'manager' | 'sales_rep';
   status: 'active' | 'inactive' | 'pending';
   avatar_url?: string;
   tenant_id: string;
@@ -41,7 +41,7 @@ export interface RegisterData {
   password: string;
   first_name: string;
   last_name: string;
-  role?: 'admin' | 'manager' | 'sales_rep' | 'marketer';
+  role?: 'manager' | 'sales_rep';
   tenant_id?: string;
 }
 
@@ -50,11 +50,11 @@ export interface LoginData {
   password: string;
 }
 
-export interface UpdateProfileData {
+export interface UpdateUserData {
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-  role?: 'admin' | 'manager' | 'sales_rep' | 'marketer';
+  role?: 'manager' | 'sales_rep';
   preferences?: {
     theme?: 'light' | 'dark' | 'system';
     notification_settings?: {
@@ -223,31 +223,31 @@ export class ApiClient {
 
   // Admin methods
   async getPendingUsers(): Promise<ApiResponse<User[]>> {
-    return this.get('/api/v1/auth/admin/pending-users');
+    return this.get('/api/v1/auth/manager/pending-users');
   }
 
   async getAllUsers(): Promise<ApiResponse<User[]>> {
-    return this.get('/api/v1/auth/admin/all-users');
+    return this.get('/api/v1/auth/manager/all-users');
   }
 
   async getUsersByStatus(status: 'active' | 'inactive' | 'pending'): Promise<ApiResponse<User[]>> {
-    return this.get(`/api/v1/auth/admin/users?status=${status}`);
+    return this.get(`/api/v1/auth/manager/users?status=${status}`);
   }
 
-  async approveUser(userId: string, role?: 'admin' | 'manager' | 'sales_rep' | 'marketer') {
-    return this.patch(`/api/v1/auth/admin/approve-user/${userId}`, { role });
+  async approveUser(userId: string, role?: 'manager' | 'sales_rep') {
+    return this.patch(`/api/v1/auth/manager/approve-user/${userId}`, { role });
   }
 
   async rejectUser(userId: string, reason?: string) {
-    return this.delete(`/api/v1/auth/admin/reject-user/${userId}`);
+    return this.delete(`/api/v1/auth/manager/reject-user/${userId}`);
   }
 
   async updateUserStatus(userId: string, status: 'active' | 'inactive') {
-    return this.patch(`/api/v1/auth/admin/user-status/${userId}`, { status });
+    return this.patch(`/api/v1/auth/manager/user-status/${userId}`, { status });
   }
 
-  async updateUserRole(userId: string, role: 'admin' | 'manager' | 'sales_rep' | 'marketer') {
-    return this.patch(`/api/v1/auth/admin/user-role/${userId}`, { role });
+  async updateUserRole(userId: string, role: 'manager' | 'sales_rep') {
+    return this.patch(`/api/v1/auth/manager/user-role/${userId}`, { role });
   }
 
   async verifyToken(data: { idToken: string }): Promise<ApiResponse<{ user: any; token: string }>> {

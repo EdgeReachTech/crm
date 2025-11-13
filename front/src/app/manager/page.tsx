@@ -21,14 +21,14 @@ import {
   ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 
-interface AdminStats {
+interface ManagerStats {
   totalUsers: number;
   pendingUsers: number;
   activeUsers: number;
   inactiveUsers: number;
 }
 
-export default function AdminDashboardPage() {
+export default function ManagerDashboardPage() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [loading, setLoading] = useState(false);
@@ -39,7 +39,7 @@ export default function AdminDashboardPage() {
   const [currentTab, setCurrentTab] = useState<'pending' | 'active' | 'inactive' | 'all'>('pending');
   const [roles, setRoles] = useState<Record<string, 'manager' | 'sales_rep'>>({});
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
-  const [stats, setStats] = useState<AdminStats>({
+  const [stats, setStats] = useState<ManagerStats>({
     totalUsers: 0,
     pendingUsers: 0,
     activeUsers: 0,
@@ -348,7 +348,7 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const adminStatsCards = [
+  const managerStatsCards = [
     {
       name: 'Total Users',
       value: stats.totalUsers.toString(),
@@ -380,28 +380,28 @@ export default function AdminDashboardPage() {
       name: 'Sales Team Management',
       description: 'Manage sales rep accounts and permissions',
       icon: UserGroupIcon,
-      href: '/admin/users',
+      href: '/manager/users',
       color: 'bg-blue-500',
     },
     {
       name: 'Sales Analytics',
       description: 'View team performance and sales metrics',
       icon: ChartBarIcon,
-      href: '/admin/analytics',
+      href: '/manager/analytics',
       color: 'bg-green-500',
     },
     {
       name: 'Team Settings',
       description: 'Configure team-wide sales settings',
       icon: Cog6ToothIcon,
-      href: '/admin/settings',
+      href: '/manager/settings',
       color: 'bg-purple-500',
     },
     {
       name: 'Sales Reports',
       description: 'Generate and review sales performance reports',
       icon: ShieldCheckIcon,
-      href: '/admin/reports',
+      href: '/manager/reports',
       color: 'bg-indigo-500',
     },
   ];
@@ -467,7 +467,7 @@ export default function AdminDashboardPage() {
 
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {adminStatsCards.map((stat) => (
+            {managerStatsCards.map((stat) => (
               <Card key={stat.name} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">

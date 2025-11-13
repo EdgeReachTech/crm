@@ -35,7 +35,7 @@ router.put('/:id',
 
 router.delete('/:id', 
   requireSameTenant,
-  requireRole(['admin', 'manager']),
+  requireRole(['manager']),
   LeadController.getLeadValidation,
   (req: Request, res: Response) => leadController.deleteLead(req, res)
 );

@@ -9,7 +9,7 @@ const mockFirebaseUser = {
   displayName: null,
   phoneNumber: null,
   photoURL: null,
-  customClaims: { role: 'admin', tenant_id: 'mock-tenant-id' },
+  customClaims: { role: 'manager', tenant_id: 'mock-tenant-id' },
   metadata: {
     lastSignInTime: null,
     creationTime: new Date().toISOString(),

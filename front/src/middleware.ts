@@ -12,9 +12,9 @@ const publicRoutes = [
   '/support'
 ];
 
-// Define admin-only routes
-const adminRoutes = [
-  '/admin'
+// Define manager-only routes
+const managerOnlyRoutes = [
+  '/manager'
 ];
 
 // Define manager+ routes

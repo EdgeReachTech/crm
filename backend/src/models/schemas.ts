@@ -8,22 +8,32 @@ export const commonFields = {
   updated_at: z.string().transform((str) => new Date(str)),
 };
 
-// User Schema
+// User Schema - Updated to match new migration
 export const userSchema = z.object({
   ...commonFields,
-  firebase_uid: z.string().optional(),
+  firebase_uid: z.string().optional().nullable(),
   email: z.string().email(),
-  first_name: z.string().min(1),
-  last_name: z.string().min(1),
-  role: z.enum(['admin', 'manager', 'sales_rep']).default('sales_rep'),
+  first_name: z.string().nullable().transform(val => val || ''),
+  last_name: z.string().nullable().transform(val => val || ''),
+  role: z.enum(['manager', 'sales_rep']).default('sales_rep'),
   status: z.enum(['active', 'inactive', 'pending']).default('active'),
   profile_image: z.string().url().optional().nullable(),
+  monthly_quota: z.number().default(0),
+  yearly_quota: z.number().default(0),
+  current_revenue: z.number().default(0),
   preferences: z.object({
     theme: z.enum(['light', 'dark', 'system']).default('system'),
     notification_settings: z.object({
       email: z.boolean().default(true),
       push: z.boolean().default(true),
       digest_frequency: z.enum(['never', 'daily', 'weekly']).default('daily'),
+      follow_ups: z.boolean().default(true),
+      deal_updates: z.boolean().default(true),
+    }).optional(),
+    working_hours: z.object({
+      start: z.string().default('09:00'),
+      end: z.string().default('17:00'),
+      timezone: z.string().default('UTC'),
     }).optional(),
     default_dashboard: z.string().optional().nullable(),
   }).optional(),
@@ -43,7 +53,7 @@ export const registerSchema = z.object({
     password: z.string().min(8),
     first_name: z.string().min(1),
     last_name: z.string().min(1),
-    role: z.enum(['admin', 'sales_rep', 'manager']).default('sales_rep'),
+    role: z.enum(['manager', 'sales_rep']).default('sales_rep'),
     tenant_id: z.string().uuid().optional(),
     idToken: z.string().optional() // For Firebase-based registration
   })
@@ -61,7 +71,7 @@ export const updateProfileSchema = z.object({
     first_name: z.string().min(1).optional(),
     last_name: z.string().min(1).optional(),
     avatar_url: z.string().url().optional(),
-    role: z.enum(['admin', 'sales_rep', 'manager']).optional(),
+    role: z.enum(['manager', 'sales_rep']).optional(),
     preferences: z.object({
       theme: z.enum(['light', 'dark', 'system']).optional(),
       notification_settings: z.object({
@@ -74,7 +84,7 @@ export const updateProfileSchema = z.object({
   })
 });
 
-// Lead Schema
+// Lead Schema - Updated for new sales CRM structure
 export const leadSchema = z.object({
   ...commonFields,
   firstName: z.string().min(1),
@@ -82,44 +92,78 @@ export const leadSchema = z.object({
   email: z.string().email(),
   company: z.string().min(1),
   phone: z.string().optional(),
-  source: z.enum(['website', 'linkedin', 'referral', 'other']),
+  title: z.string().optional(),
+  source: z.enum(['website', 'linkedin', 'referral', 'cold_outreach', 'event', 'partner', 'other']),
+  source_details: z.string().optional(),
   status: z.enum(['new', 'contacted', 'qualified', 'unqualified']),
+  interest_level: z.enum(['hot', 'warm', 'cold']).default('cold'),
+  qualification_status: z.enum(['unqualified', 'marketing_qualified', 'sales_qualified']).default('unqualified'),
+  current_stage_id: z.string().uuid().optional(),
   score: z.number().min(0).max(100),
+  budget_range: z.string().optional(),
+  timeline: z.string().optional(),
+  pain_points: z.string().optional(),
+  decision_maker_contact: z.string().uuid().optional(),
+  next_follow_up: z.string().transform(str => new Date(str)).optional(),
+  converted_to_opportunity: z.boolean().default(false),
+  conversion_date: z.string().transform(str => new Date(str)).optional(),
   owner_id: z.string().uuid(),
   notes: z.string().optional(),
-  last_contacted: z.date().optional(),
+  last_contacted: z.string().transform(str => new Date(str)).optional(),
 });
 
 export type Lead = z.infer<typeof leadSchema>;
 
-// Opportunity Schema
+// Opportunity Schema - Enhanced for sales CRM
 export const opportunitySchema = z.object({
   ...commonFields,
   name: z.string().min(1),
+  description: z.string().optional(),
   value: z.number().min(0),
   stage: z.enum(['qualified', 'discovery', 'proposal', 'negotiation', 'closed_won', 'closed_lost']),
+  current_stage_id: z.string().uuid().optional(),
   probability: z.number().min(0).max(100),
-  expected_close_date: z.date(),
+  expected_close_date: z.string().transform(str => new Date(str)),
+  actual_close_date: z.string().transform(str => new Date(str)).optional(),
+  account_id: z.string().uuid().optional(),
+  primary_contact_id: z.string().uuid().optional(),
   lead_id: z.string().uuid(),
   owner_id: z.string().uuid(),
+  sales_process: z.string().optional(),
+  budget_confirmed: z.boolean().default(false),
+  authority_identified: z.boolean().default(false),
+  need_established: z.boolean().default(false),
+  timeline_defined: z.boolean().default(false),
+  competitors: z.array(z.string()).optional(),
+  pricing_strategy: z.string().optional(),
+  discount_percentage: z.number().min(0).max(100).default(0),
+  outcome: z.enum(['won', 'lost', 'no_decision']).optional(),
+  lost_reason: z.string().optional(),
+  lost_to_competitor: z.string().optional(),
+  next_follow_up: z.string().transform(str => new Date(str)).optional(),
   notes: z.string().optional(),
-  last_activity_date: z.date().optional(),
+  last_activity_date: z.string().transform(str => new Date(str)).optional(),
 });
 
 export type Opportunity = z.infer<typeof opportunitySchema>;
 
-// Contact Schema
+// Contact Schema - Enhanced for sales process
 export const contactSchema = z.object({
   ...commonFields,
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.string().email(),
   phone: z.string().optional(),
-  role: z.enum(['decision_maker', 'influencer', 'evaluator', 'gatekeeper', 'other']),
+  role: z.enum(['decision_maker', 'influencer', 'evaluator', 'gatekeeper', 'end_user']),
   title: z.string().optional(),
   account_id: z.string().uuid(),
+  is_primary_contact: z.boolean().default(false),
+  authority_level: z.enum(['low', 'medium', 'high']).default('low'),
+  budget_influence: z.boolean().default(false),
+  last_contacted: z.string().transform(str => new Date(str)).optional(),
+  contact_preference: z.enum(['email', 'phone', 'meeting', 'no_contact']).default('email'),
   opt_out: z.boolean().default(false),
-  last_activity_date: z.date().optional(),
+  last_activity_date: z.string().transform(str => new Date(str)).optional(),
   preferences: z.object({
     email_marketing: z.boolean().default(true),
     newsletter: z.boolean().default(true),
@@ -133,13 +177,19 @@ export const contactSchema = z.object({
 
 export type Contact = z.infer<typeof contactSchema>;
 
-// Account Schema
+// Account Schema - Enhanced for sales CRM
 export const accountSchema = z.object({
   ...commonFields,
   name: z.string().min(1),
   industry: z.string(),
   website: z.string().url().optional(),
-  size: z.enum(['small', 'medium', 'large', 'enterprise']),
+  size: z.enum(['startup', 'small', 'medium', 'large', 'enterprise']),
+  employee_count: z.number().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  total_revenue: z.number().default(0),
+  last_activity_date: z.string().transform(str => new Date(str)).optional(),
+  relationship_status: z.enum(['prospect', 'client', 'partner', 'inactive']).default('prospect'),
   parent_account_id: z.string().uuid().optional(),
   annual_revenue: z.number().optional(),
   owner_id: z.string().uuid(),
@@ -198,6 +248,146 @@ export const campaignSchema = z.object({
 });
 
 export type Campaign = z.infer<typeof campaignSchema>;
+
+// Sales Stages Schema - New table from migration
+export const salesStageSchema = z.object({
+  ...commonFields,
+  name: z.string().min(1),
+  stage_order: z.number(),
+  stage_type: z.enum(['lead', 'prospect', 'opportunity', 'client']),
+  probability_weight: z.number().min(0).max(100).default(0),
+  is_active: z.boolean().default(true),
+});
+
+export type SalesStage = z.infer<typeof salesStageSchema>;
+
+// Activities Schema - New table from migration
+export const activitySchema = z.object({
+  ...commonFields,
+  title: z.string().min(1),
+  description: z.string().optional(),
+  activity_type: z.enum(['call', 'email', 'meeting', 'demo', 'proposal', 'follow_up', 'note']),
+  activity_date: z.string().transform(str => new Date(str)),
+  duration_minutes: z.number().optional(),
+  outcome: z.enum(['positive', 'neutral', 'negative', 'no_response']).optional(),
+  owner_id: z.string().uuid(),
+  lead_id: z.string().uuid().optional(),
+  opportunity_id: z.string().uuid().optional(),
+  contact_id: z.string().uuid().optional(),
+  account_id: z.string().uuid().optional(),
+  is_completed: z.boolean().default(false),
+  calendar_event_id: z.string().optional(),
+  follow_up_required: z.boolean().default(false),
+  next_action: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type Activity = z.infer<typeof activitySchema>;
+
+// Follow-ups Schema - New table from migration
+export const followUpSchema = z.object({
+  ...commonFields,
+  title: z.string().min(1),
+  description: z.string().optional(),
+  due_date: z.string().transform(str => new Date(str)),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']).default('pending'),
+  owner_id: z.string().uuid(),
+  lead_id: z.string().uuid().optional(),
+  opportunity_id: z.string().uuid().optional(),
+  contact_id: z.string().uuid().optional(),
+  account_id: z.string().uuid().optional(),
+  calendar_event_id: z.string().optional(),
+  reminder_minutes: z.number().default(15),
+  completed_at: z.string().transform(str => new Date(str)).optional(),
+  completed_activity_id: z.string().uuid().optional(),
+});
+
+export type FollowUp = z.infer<typeof followUpSchema>;
+
+// Revenue Tracking Schema - New table from migration
+export const revenueTrackingSchema = z.object({
+  ...commonFields,
+  opportunity_id: z.string().uuid(),
+  sales_rep_id: z.string().uuid(),
+  revenue_amount: z.number().min(0),
+  revenue_date: z.string().transform(str => new Date(str)),
+  revenue_type: z.enum(['new_business', 'upsell', 'renewal', 'expansion']).default('new_business'),
+  commission_rate: z.number().min(0).max(1).default(0),
+  commission_amount: z.number().default(0),
+  revenue_month: z.number().min(1).max(12),
+  revenue_quarter: z.number().min(1).max(4),
+  revenue_year: z.number(),
+});
+
+export type RevenueTracking = z.infer<typeof revenueTrackingSchema>;
+
+// Sales Targets Schema - New table from migration
+export const salesTargetSchema = z.object({
+  ...commonFields,
+  sales_rep_id: z.string().uuid(),
+  target_period: z.enum(['monthly', 'quarterly', 'yearly']),
+  target_year: z.number(),
+  target_month: z.number().min(1).max(12).optional(),
+  target_quarter: z.number().min(1).max(4).optional(),
+  revenue_target: z.number().min(0),
+  deals_target: z.number().default(0),
+  activities_target: z.number().default(0),
+  actual_revenue: z.number().default(0),
+  actual_deals: z.number().default(0),
+  actual_activities: z.number().default(0),
+  target_progress: z.number().min(0).max(100).default(0),
+});
+
+export type SalesTarget = z.infer<typeof salesTargetSchema>;
+
+// Manager Comments Schema - New table from migration
+export const managerCommentSchema = z.object({
+  ...commonFields,
+  manager_id: z.string().uuid(),
+  sales_rep_id: z.string().uuid(),
+  comment_type: z.enum(['coaching', 'feedback', 'approval', 'instruction']),
+  comment: z.string().min(1),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
+  lead_id: z.string().uuid().optional(),
+  opportunity_id: z.string().uuid().optional(),
+  activity_id: z.string().uuid().optional(),
+  is_read: z.boolean().default(false),
+  read_at: z.string().transform(str => new Date(str)).optional(),
+  requires_action: z.boolean().default(false),
+  action_completed: z.boolean().default(false),
+});
+
+export type ManagerComment = z.infer<typeof managerCommentSchema>;
+
+// Email Templates Schema - New table from migration
+export const emailTemplateSchema = z.object({
+  ...commonFields,
+  name: z.string().min(1),
+  subject: z.string().min(1),
+  body: z.string().min(1),
+  template_type: z.enum(['initial_contact', 'follow_up', 'proposal', 'thank_you', 'closing', 'lost_deal']),
+  is_active: z.boolean().default(true),
+  created_by: z.string().uuid().optional(),
+  variables: z.array(z.string()).default(['first_name', 'last_name', 'company']),
+});
+
+export type EmailTemplate = z.infer<typeof emailTemplateSchema>;
+
+// Client Interactions Schema - New table from migration
+export const clientInteractionSchema = z.object({
+  ...commonFields,
+  client_account_id: z.string().uuid(),
+  interaction_type: z.enum(['onboarding', 'support', 'upsell', 'renewal', 'feedback', 'complaint']),
+  interaction_date: z.string().default(() => new Date().toISOString()).transform(str => new Date(str)),
+  description: z.string().min(1),
+  outcome: z.enum(['positive', 'neutral', 'negative', 'pending']).optional(),
+  owner_id: z.string().uuid(),
+  follow_up_required: z.boolean().default(false),
+  satisfaction_score: z.number().min(1).max(5).optional(),
+});
+
+export type ClientInteraction = z.infer<typeof clientInteractionSchema>;
 
 
 

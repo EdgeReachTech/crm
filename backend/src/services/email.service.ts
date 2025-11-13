@@ -262,15 +262,15 @@ class EmailService {
             </p>
           </div>
           
-          <p>Your account has been created successfully and is currently under review by our administrators.</p>
+          <p>Your account has been created successfully and is currently under review by our managers.</p>
           
           <div style="text-align: center;">
-            <span class="status-badge">⏳ Pending Admin Approval</span>
+            <span class="status-badge">⏳ Pending Manager Approval</span>
           </div>
           
           <p><strong>What happens next?</strong></p>
           <ul style="color: #475569;">
-            <li>Our admin team will review your registration request</li>
+            <li>Our management team will review your registration request</li>
             <li>You'll receive an email notification once your account is approved</li>
             <li>After approval, you can log in and access all CRM features</li>
           </ul>

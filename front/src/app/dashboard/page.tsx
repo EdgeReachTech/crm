@@ -114,15 +114,15 @@ function DashboardContent() {
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Admin Dashboard Link */}
-              {user?.role === 'admin' && (
+              {/* Manager Dashboard Link */}
+              {user?.role === 'manager' && (
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = '/admin'}
+                  onClick={() => window.location.href = '/manager'}
                   leftIcon={<Cog6ToothIcon className="w-4 h-4" />}
                 >
-                  Admin Dashboard
+                  Manager Dashboard
                 </Button>
               )}
               
@@ -273,7 +273,7 @@ function DashboardContent() {
         </div>
 
         {/* Role-specific content */}
-        {(user?.role === 'admin' || user?.role === 'manager') && (
+        {user?.role === 'manager' && (
           <div className="mt-8">
             <Card>
               <CardHeader>

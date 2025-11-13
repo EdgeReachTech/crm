@@ -20,13 +20,13 @@ jest.doMock('../config/firebase', () => ({
       return {
         uid: 'mock-uid',
         email: 'test@example.com',
-        role: 'admin',
+        role: 'manager',
         tenant_id: 'mock-tenant-id',
       } as any;
     }),
     getUserByEmail: jest.fn().mockImplementation(async (email: string) => {
       if (email === 'test@example.com') {
-        return { uid: 'mock-uid', email, customClaims: { role: 'admin', tenant_id: 'mock-tenant-id' } } as any;
+        return { uid: 'mock-uid', email, customClaims: { role: 'manager', tenant_id: 'mock-tenant-id' } } as any;
       }
       const err: any = new Error('User not found');
       err.code = 'auth/user-not-found';
@@ -71,7 +71,7 @@ describe('Authentication Flow', () => {
     password: 'Password123!',
     firstName: 'Test',
     lastName: 'User',
-    role: 'admin',
+    role: 'manager',
   };
 
   beforeEach(() => {
@@ -280,7 +280,7 @@ describe('Authentication Flow', () => {
       expect(response.body.code).toBe('TOKEN_INVALID');
     });
 
-    it('should update user role as admin', async () => {
+    it('should update user role as manager', async () => {
       const response = await request(app)
         .patch('/api/v1/auth/profile')
         .set('Authorization', `Bearer ${userToken}`)

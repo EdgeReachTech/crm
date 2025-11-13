@@ -12,10 +12,12 @@ export default function Home() {
     if (!isLoading) {
       if (user) {
         // Redirect based on user role
-        if (user.role === 'admin') {
-          router.push('/admin');
+        if (user.role === 'manager') {
+          router.push('/manager'); // Manager dashboard for managing sales reps
+        } else if (user.role === 'sales_rep') {
+          router.push('/dashboard'); // Sales rep dashboard
         } else {
-          router.push('/dashboard');
+          router.push('/dashboard'); // Default to dashboard
         }
       } else {
         router.push('/login');
