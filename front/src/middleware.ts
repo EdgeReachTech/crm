@@ -13,7 +13,9 @@ const publicRoutes = [
 ];
 
 // Define manager-only routes
-const managerOnlyRoutes = ['/manager'];
+const managerOnlyRoutes = [
+  '/manager'
+];
 
 // Define manager+ routes
 const managerRoutes = ['/reports', '/settings/users'];

@@ -41,15 +41,9 @@ export default function AdminDashboardPage() {
   const [activeUsers, setActiveUsers] = useState<User[]>([]);
   const [inactiveUsers, setInactiveUsers] = useState<User[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [currentTab, setCurrentTab] = useState<
-    'pending' | 'active' | 'inactive' | 'all'
-  >('pending');
-  const [roles, setRoles] = useState<Record<string, 'manager' | 'sales_rep'>>(
-    {}
-  );
-  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [currentTab, setCurrentTab] = useState<'pending' | 'active' | 'inactive' | 'all'>('pending');
+  const [roles, setRoles] = useState<Record<string, 'manager' | 'sales_rep'>>({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
     pendingUsers: 0,
@@ -245,20 +239,10 @@ export default function AdminDashboardPage() {
     }
   }
 
-  async function handleUpdateRole(
-    userId: string,
-    newRole: 'manager' | 'sales_rep'
-  ) {
-    console.log('🔍 Frontend handleUpdateRole called with:', {
-      userId,
-      newRole,
-    });
-
-    if (
-      !confirm(
-        `Are you sure you want to change this user's role to ${newRole}?`
-      )
-    ) {
+  async function handleUpdateRole(userId: string, newRole: 'manager' | 'sales_rep') {
+    console.log('🔍 Frontend handleUpdateRole called with:', { userId, newRole });
+    
+    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
       return;
     }
 
@@ -324,13 +308,10 @@ export default function AdminDashboardPage() {
                 >
                   {user.status}
                 </span>
-                <span
-                  className={`rounded-full px-2 py-1 font-medium ${
-                    user.role === 'manager'
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
+                <span className={`px-2 py-1 rounded-full font-medium ${
+                  user.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
                   {user.role}
                 </span>
                 <span className="text-neutral-400">
@@ -346,13 +327,8 @@ export default function AdminDashboardPage() {
           {showRoleEditor && (
             <select
               value={user.role}
-              onChange={(e) =>
-                handleUpdateRole(
-                  user.id,
-                  e.target.value as 'manager' | 'sales_rep'
-                )
-              }
-              className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+              onChange={(e) => handleUpdateRole(user.id, e.target.value as 'manager' | 'sales_rep')}
+              className="border border-neutral-300 dark:border-neutral-600 rounded-md px-3 py-2 bg-white dark:bg-neutral-800 text-sm"
               disabled={!!actionLoading[`role_${user.id}`]}
             >
               <option value="sales_rep">Sales Rep</option>
@@ -365,13 +341,8 @@ export default function AdminDashboardPage() {
             <>
               <select
                 value={roles[user.id] || 'sales_rep'}
-                onChange={(e) =>
-                  setRoles((r) => ({
-                    ...r,
-                    [user.id]: e.target.value as 'manager' | 'sales_rep',
-                  }))
-                }
-                className="rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+                onChange={(e) => setRoles(r => ({ ...r, [user.id]: e.target.value as 'manager' | 'sales_rep' }))}
+                className="border border-neutral-300 dark:border-neutral-600 rounded-md px-3 py-2 bg-white dark:bg-neutral-800 text-sm"
               >
                 <option value="sales_rep">Sales Rep</option>
                 <option value="manager">Manager</option>
@@ -519,7 +490,7 @@ export default function AdminDashboardPage() {
                     <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                       {user?.first_name} {user?.last_name}
                     </p>
-                    <p className="text-xs capitalize text-neutral-500 dark:text-neutral-400">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 capitalize">
                       {user?.role} Manager
                     </p>
                   </div>
@@ -546,8 +517,7 @@ export default function AdminDashboardPage() {
               Welcome back, {user?.first_name}!
             </h2>
             <p className="text-neutral-600 dark:text-neutral-400">
-              Manage your sales team, approve new sales reps, and oversee sales
-              activities from this dashboard.
+              Manage your sales team, approve new sales reps, and oversee sales activities from this dashboard.
             </p>
           </div>
 
@@ -651,7 +621,7 @@ export default function AdminDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle size="lg">Sales Team Management</CardTitle>
-              <div className="mt-4 flex space-x-1">
+              <div className="flex space-x-1 mt-4">
                 {[
                   {
                     key: 'pending',

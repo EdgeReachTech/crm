@@ -241,9 +241,7 @@ export class ApiClient {
     return this.get('/api/v1/auth/manager/all-users');
   }
 
-  async getUsersByStatus(
-    status: 'active' | 'inactive' | 'pending'
-  ): Promise<ApiResponse<User[]>> {
+  async getUsersByStatus(status: 'active' | 'inactive' | 'pending'): Promise<ApiResponse<User[]>> {
     return this.get(`/api/v1/auth/manager/users?status=${status}`);
   }
 

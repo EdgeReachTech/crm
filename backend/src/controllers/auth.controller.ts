@@ -413,9 +413,9 @@ export class AuthController {
       const { role } = req.body;
 
       const user = await this.authService.approveUser(managerUid, userId, role);
-
-      res.status(200).json({
-        status: "success",
+      
+      res.status(200).json({ 
+        status: 'success',
         data: user,
         message: "User approved successfully",
       });
@@ -441,10 +441,10 @@ export class AuthController {
     try {
       const managerUid = (req as any).user?.uid;
       const pendingUsers = await this.authService.getPendingUsers(managerUid);
-
-      res.status(200).json({
-        status: "success",
-        data: pendingUsers,
+      
+      res.status(200).json({ 
+        status: 'success',
+        data: pendingUsers
       });
     } catch (error) {
       if (error instanceof ApiError) {
@@ -470,14 +470,10 @@ export class AuthController {
       const { userId } = req.params;
       const { reason } = req.body;
 
-      const result = await this.authService.rejectUser(
-        managerUid,
-        userId,
-        reason
-      );
-
-      res.status(200).json({
-        status: "success",
+      const result = await this.authService.rejectUser(managerUid, userId, reason);
+      
+      res.status(200).json({ 
+        status: 'success',
         data: result,
         message: "User registration rejected successfully",
       });
@@ -503,7 +499,7 @@ export class AuthController {
     try {
       const managerUid = (req as any).user?.uid;
       const allUsers = await this.authService.getAllUsers(managerUid);
-
+      
       res.status(200).json({
         status: "success",
         data: allUsers,
@@ -542,12 +538,9 @@ export class AuthController {
         });
         return;
       }
-
-      const users = await this.authService.getUsersByStatus(
-        managerUid,
-        status as string
-      );
-
+      
+      const users = await this.authService.getUsersByStatus(managerUid, status as string);
+      
       res.status(200).json({
         status: "success",
         data: users,
@@ -584,13 +577,9 @@ export class AuthController {
         });
         return;
       }
-
-      const user = await this.authService.updateUserStatus(
-        managerUid,
-        userId,
-        status
-      );
-
+      
+      const user = await this.authService.updateUserStatus(managerUid, userId, status);
+      
       res.status(200).json({
         status: "success",
         data: user,
@@ -619,22 +608,18 @@ export class AuthController {
       const managerUid = (req as any).user?.uid;
       const { userId } = req.params;
       const { role } = req.body;
-
-      if (!role || !["manager", "sales_rep"].includes(role)) {
+      
+      if (!role || !['manager', 'sales_rep'].includes(role)) {
         res.status(400).json({
-          status: "error",
-          code: "INVALID_ROLE",
-          message: "Invalid role. Must be one of: manager, sales_rep",
+          status: 'error',
+          code: 'INVALID_ROLE',
+          message: 'Invalid role. Must be one of: manager, sales_rep'
         });
         return;
       }
-
-      const user = await this.authService.updateUserRole(
-        managerUid,
-        userId,
-        role
-      );
-
+      
+      const user = await this.authService.updateUserRole(managerUid, userId, role);
+      
       res.status(200).json({
         status: "success",
         data: user,

@@ -19,19 +19,15 @@ export class AuthService {
   async registerUser(email: string, password: string, userData: Partial<User>) {
     try {
       // Determine user role and status based on email and security rules
-      const isDefaultAdmin = email === "fiacrepcc@gmail.com";
-      const defaultRole = isDefaultAdmin ? "manager" : "sales_rep";
-      const defaultStatus = isDefaultAdmin ? "active" : "pending";
+      const isDefaultAdmin = email === 'fiacrepcc@gmail.com';
+      const defaultRole = isDefaultAdmin ? 'manager' : 'sales_rep';
+      const defaultStatus = isDefaultAdmin ? 'active' : 'pending';
 
       // Override role assignment for security - only allow manager role for specific email
       const finalUserData = {
         ...userData,
-        role: isDefaultAdmin
-          ? "manager"
-          : (userData.role as string) === "admin"
-          ? "sales_rep"
-          : userData.role || defaultRole,
-        status: defaultStatus,
+        role: isDefaultAdmin ? 'manager' : ((userData.role as string) === 'admin' ? 'sales_rep' : userData.role || defaultRole),
+        status: defaultStatus
       };
 
       // Check if we're in a test environment and use mock behavior
@@ -148,20 +144,11 @@ export class AuthService {
           .single());
       } catch (dbError: any) {
         // If firebase_uid column doesn't exist, provide helpful error
-        if (
-          dbError.message?.includes(
-            'column "firebase_uid" of relation "users" does not exist'
-          )
-        ) {
-          console.error("❌ Database schema update needed!");
-          console.error("Please run this SQL in Supabase dashboard:");
-          console.error(
-            "ALTER TABLE users ADD COLUMN firebase_uid TEXT UNIQUE;"
-          );
-          throw new ApiError(
-            "DatabaseSchemaError",
-            "Database schema needs to be updated. Please contact manager."
-          );
+        if (dbError.message?.includes('column "firebase_uid" of relation "users" does not exist')) {
+          console.error('❌ Database schema update needed!');
+          console.error('Please run this SQL in Supabase dashboard:');
+          console.error('ALTER TABLE users ADD COLUMN firebase_uid TEXT UNIQUE;');
+          throw new ApiError('DatabaseSchemaError', 'Database schema needs to be updated. Please contact manager.');
         }
         throw dbError;
       }
@@ -234,9 +221,9 @@ export class AuthService {
       console.log("🔍 createUserProfile called with userData:", userData);
 
       // Determine user role and status based on email and security rules
-      const isDefaultAdmin = userData.email === "fiacrepcc@gmail.com";
-      const defaultRole = isDefaultAdmin ? "manager" : "sales_rep";
-      const defaultStatus = isDefaultAdmin ? "active" : "pending";
+      const isDefaultAdmin = userData.email === 'fiacrepcc@gmail.com';
+      const defaultRole = isDefaultAdmin ? 'manager' : 'sales_rep';
+      const defaultStatus = isDefaultAdmin ? 'active' : 'pending';
 
       // Get or create default tenant (ignore any passed tenant_id for security)
       let tenantId;
@@ -267,11 +254,7 @@ export class AuthService {
         first_name: userData.first_name,
         last_name: userData.last_name,
         firebase_uid: firebaseUid,
-        role: isDefaultAdmin
-          ? "manager"
-          : userData.role === "admin"
-          ? "sales_rep"
-          : userData.role || defaultRole,
+        role: isDefaultAdmin ? 'manager' : (userData.role === 'admin' ? 'sales_rep' : userData.role || defaultRole),
         status: defaultStatus,
         tenant_id: tenantId, // Use the dynamically created/found tenant ID
       };
@@ -368,11 +351,8 @@ export class AuthService {
       }
 
       // Check if user account is approved
-      if (user.status === "pending") {
-        throw new ApiError(
-          "ACCOUNT_PENDING",
-          "Your account is pending approval by a manager"
-        );
+      if (user.status === 'pending') {
+        throw new ApiError('ACCOUNT_PENDING', 'Your account is pending approval by a manager');
       }
 
       if (user.status === "inactive") {
@@ -424,7 +404,7 @@ export class AuthService {
   async loginUser(email: string, password: string) {
     try {
       // Special handling for our bootstrapped manager user
-      if (email === "fiacrepcc@gmail.com" && password === "Admin123!@#") {
+      if (email === 'fiacrepcc@gmail.com' && password === 'Admin123!@#') {
         // Get user profile from Supabase using email
         const { data: user, error } = await supabase
           .from("users")
@@ -439,11 +419,8 @@ export class AuthService {
         if (!user) throw new ApiError("USER_NOT_FOUND", "User not found");
 
         // Check if user account is approved
-        if (user.status === "pending") {
-          throw new ApiError(
-            "ACCOUNT_PENDING",
-            "Your account is pending approval by a manager"
-          );
+        if (user.status === 'pending') {
+          throw new ApiError('ACCOUNT_PENDING', 'Your account is pending approval by a manager');
         }
 
         if (user.status === "inactive") {
@@ -491,11 +468,8 @@ export class AuthService {
         }
 
         // Check if user account is approved (same logic as production)
-        if (user.status === "pending") {
-          throw new ApiError(
-            "ACCOUNT_PENDING",
-            "Your account is pending approval by a manager"
-          );
+        if (user.status === 'pending') {
+          throw new ApiError('ACCOUNT_PENDING', 'Your account is pending approval by a manager');
         }
 
         if (user.status === "inactive") {
@@ -550,11 +524,8 @@ export class AuthService {
       if (!user) throw new ApiError("UserNotFound", "User not found");
 
       // Check if user account is approved
-      if (user.status === "pending") {
-        throw new ApiError(
-          "ACCOUNT_PENDING",
-          "Your account is pending approval by a manager"
-        );
+      if (user.status === 'pending') {
+        throw new ApiError('ACCOUNT_PENDING', 'Your account is pending approval by a manager');
       }
 
       if (user.status === "inactive") {
@@ -635,31 +606,23 @@ export class AuthService {
     }
   }
 
-  async approveUser(
-    managerUid: string,
-    userIdToApprove: string,
-    assignedRole?: "manager" | "sales_rep"
-  ) {
+  async approveUser(managerUid: string, userIdToApprove: string, assignedRole?: 'manager' | 'sales_rep') {
     try {
-      console.log("🔍 approveUser called with:", {
-        managerUid,
-        userIdToApprove,
-        assignedRole,
-      });
-
+      console.log('🔍 approveUser called with:', { managerUid, userIdToApprove, assignedRole });
+      
       // First verify that the manager has permission to approve users
       // Accept either database id or firebase_uid for manager identification
       const managerQuery = `id.eq.${managerUid},firebase_uid.eq.${managerUid}`;
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(managerQuery)
         .single();
 
-      console.log("👤 Manager lookup result:", { manager, managerError });
+      console.log('👤 Manager lookup result:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError("UNAUTHORIZED", "Only managers can approve users");
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can approve users');
       }
 
       // Update user status to active and optionally assign role
@@ -753,25 +716,19 @@ export class AuthService {
 
   async getPendingUsers(managerUid: string) {
     try {
-      console.log("🔍 getPendingUsers called with managerUid:", managerUid);
-
+      console.log('🔍 getPendingUsers called with managerUid:', managerUid);
+      
       // Verify manager permissions with dual ID lookup
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(`id.eq.${managerUid},firebase_uid.eq.${managerUid}`)
         .single();
 
-      console.log("👤 Manager lookup in getPendingUsers:", {
-        manager,
-        managerError,
-      });
+      console.log('👤 Manager lookup in getPendingUsers:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError(
-          "UNAUTHORIZED",
-          "Only managers can view pending users"
-        );
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can view pending users');
       }
 
       // Get all pending users
@@ -803,31 +760,23 @@ export class AuthService {
     }
   }
 
-  async rejectUser(
-    managerUid: string,
-    userIdToReject: string,
-    reason?: string
-  ) {
+  async rejectUser(managerUid: string, userIdToReject: string, reason?: string) {
     try {
-      console.log("🔍 rejectUser called with:", {
-        managerUid,
-        userIdToReject,
-        reason,
-      });
-
+      console.log('🔍 rejectUser called with:', { managerUid, userIdToReject, reason });
+      
       // First verify that the manager has permission to reject users
       // Accept either database id or firebase_uid for manager identification
       const managerQuery = `id.eq.${managerUid},firebase_uid.eq.${managerUid}`;
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(managerQuery)
         .single();
 
-      console.log("👤 Manager lookup result:", { manager, managerError });
+      console.log('👤 Manager lookup result:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError("UNAUTHORIZED", "Only managers can reject users");
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can reject users');
       }
 
       // Get the user to be rejected (try by id, then by firebase_uid)
@@ -1141,10 +1090,10 @@ export class AuthService {
     if (process.env.NODE_ENV === "test") {
       if (token === "mock-token") {
         return {
-          uid: "mock-uid",
-          email: "test@example.com",
-          role: "manager",
-          tenant_id: "mock-tenant-id",
+          uid: 'mock-uid',
+          email: 'test@example.com',
+          role: 'manager',
+          tenant_id: 'mock-tenant-id'
         };
       }
     }
@@ -1208,23 +1157,20 @@ export class AuthService {
 
   async getAllUsers(managerUid: string) {
     try {
-      console.log("🔍 getAllUsers called with managerUid:", managerUid);
-
+      console.log('🔍 getAllUsers called with managerUid:', managerUid);
+      
       // Verify manager permissions
       const managerQuery = `id.eq.${managerUid},firebase_uid.eq.${managerUid}`;
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(managerQuery)
         .single();
 
-      console.log("👤 Manager lookup in getAllUsers:", {
-        manager,
-        managerError,
-      });
+      console.log('👤 Manager lookup in getAllUsers:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError("UNAUTHORIZED", "Only managers can view all users");
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can view all users');
       }
 
       // Get all users
@@ -1252,26 +1198,20 @@ export class AuthService {
 
   async getUsersByStatus(managerUid: string, status: string) {
     try {
-      console.log("🔍 getUsersByStatus called with:", { managerUid, status });
-
+      console.log('🔍 getUsersByStatus called with:', { managerUid, status });
+      
       // Verify manager permissions
       const managerQuery = `id.eq.${managerUid},firebase_uid.eq.${managerUid}`;
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(managerQuery)
         .single();
 
-      console.log("👤 Manager lookup in getUsersByStatus:", {
-        manager,
-        managerError,
-      });
+      console.log('👤 Manager lookup in getUsersByStatus:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError(
-          "UNAUTHORIZED",
-          "Only managers can view users by status"
-        );
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can view users by status');
       }
 
       // Get users by status
@@ -1303,36 +1243,22 @@ export class AuthService {
     }
   }
 
-  async updateUserStatus(
-    managerUid: string,
-    userIdToUpdate: string,
-    newStatus: string
-  ) {
+  async updateUserStatus(managerUid: string, userIdToUpdate: string, newStatus: string) {
     try {
-      console.log("🔍 updateUserStatus called with:", {
-        managerUid,
-        userIdToUpdate,
-        newStatus,
-      });
-
+      console.log('🔍 updateUserStatus called with:', { managerUid, userIdToUpdate, newStatus });
+      
       // Verify manager permissions
       const managerQuery = `id.eq.${managerUid},firebase_uid.eq.${managerUid}`;
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(managerQuery)
         .single();
 
-      console.log("👤 Manager lookup in updateUserStatus:", {
-        manager,
-        managerError,
-      });
+      console.log('👤 Manager lookup in updateUserStatus:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError(
-          "UNAUTHORIZED",
-          "Only managers can update user status"
-        );
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can update user status');
       }
 
       // Update user status
@@ -1362,36 +1288,22 @@ export class AuthService {
     }
   }
 
-  async updateUserRole(
-    managerUid: string,
-    userIdToUpdate: string,
-    newRole: string
-  ) {
+  async updateUserRole(managerUid: string, userIdToUpdate: string, newRole: string) {
     try {
-      console.log("🔍 updateUserRole called with:", {
-        managerUid,
-        userIdToUpdate,
-        newRole,
-      });
-
+      console.log('🔍 updateUserRole called with:', { managerUid, userIdToUpdate, newRole });
+      
       // Verify manager permissions
       const managerQuery = `id.eq.${managerUid},firebase_uid.eq.${managerUid}`;
       const { data: manager, error: managerError } = await supabase
-        .from("users")
-        .select("role")
+        .from('users')
+        .select('role')
         .or(managerQuery)
         .single();
 
-      console.log("👤 Manager lookup in updateUserRole:", {
-        manager,
-        managerError,
-      });
+      console.log('👤 Manager lookup in updateUserRole:', { manager, managerError });
 
-      if (managerError || !manager || manager.role !== "manager") {
-        throw new ApiError(
-          "UNAUTHORIZED",
-          "Only managers can update user roles"
-        );
+      if (managerError || !manager || manager.role !== 'manager') {
+        throw new ApiError('UNAUTHORIZED', 'Only managers can update user roles');
       }
 
       // Update user role

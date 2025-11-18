@@ -32,14 +32,22 @@ export default function ProtectedRoute({
     // Check role-based authorization
     if (requiredRole) {
       const roleHierarchy: Record<string, number> = {
-        sales_rep: 1,
-        manager: 2,
+        'sales_rep': 1,
+        'manager': 2
       };
 
       const userLevel = roleHierarchy[user.role] || 0;
       const requiredLevel = roleHierarchy[requiredRole] || 0;
 
       if (userLevel < requiredLevel) {
+        // Redirect based on user role
+        if (user.role === 'sales_rep') {
+          router.push('/dashboard?error=insufficient_permissions');
+        } else if (user.role === 'manager') {
+          router.push('/manager?error=insufficient_permissions');
+        } else {
+          router.push('/dashboard?error=insufficient_permissions');
+        }
         // Redirect based on user role
         if (user.role === 'sales_rep') {
           router.push('/dashboard?error=insufficient_permissions');
