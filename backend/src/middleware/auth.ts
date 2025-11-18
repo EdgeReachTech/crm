@@ -10,7 +10,7 @@ declare module 'express-serve-static-core' {
     user?: {
       uid: string;
       email: string;
-      role: 'admin' | 'manager' | 'sales_rep';
+      role: 'manager' | 'sales_rep';
       tenant_id: string;
     };
   }
@@ -89,7 +89,7 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-export const requireRole = (allowedRoles: Array<'admin' | 'manager' | 'sales_rep'>) => {
+export const requireRole = (allowedRoles: Array<'manager' | 'sales_rep'>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
@@ -113,6 +113,9 @@ export const requireRole = (allowedRoles: Array<'admin' | 'manager' | 'sales_rep
 
 export const requireSameTenant = (paramName = 'tenant_id') => {
   return (req: Request, res: Response, next: NextFunction) => {
+    console.log({
+      user:req.user?.tenant_id
+    })
     if (!req.user?.tenant_id) {
       return res.status(401).json({
         success: false,
@@ -120,6 +123,11 @@ export const requireSameTenant = (paramName = 'tenant_id') => {
         message: 'User not authenticated or missing tenant'
       });
     }
+
+    console.log({
+      paramName,
+
+    })
 
     const resourceTenantId = req.params[paramName] || req.body[paramName];
     if (!resourceTenantId) {

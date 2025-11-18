@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
                   Check Your Email
                 </h2>
                 <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                  We've sent password reset instructions to{' '}
+                  We&apos;ve sent password reset instructions to{' '}
                   <span className="font-medium text-neutral-900 dark:text-neutral-100">
                     {email}
                   </span>
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
           {/* Help text */}
           <div className="mt-6 text-center">
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Didn't receive the email? Check your spam folder or{' '}
+              Didn&apos;t receive the email? Check your spam folder or{' '}
               <button
                 onClick={() => {
                   setIsSubmitted(false);
@@ -129,7 +129,7 @@ export default function ForgotPasswordPage() {
           <CardHeader>
             <CardTitle>Forgot Password</CardTitle>
             <CardDescription>
-              No worries! Enter your email address and we'll send you instructions to reset your password.
+              No worries! Enter your email address and we&apos;ll send you instructions to reset your password.
             </CardDescription>
           </CardHeader>
 
@@ -186,7 +186,7 @@ export default function ForgotPasswordPage() {
             Need Help?
           </h3>
           <div className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400">
-            <p>• Make sure you're using the email address associated with your account</p>
+            <p>• Make sure you&apos;re using the email address associated with your account</p>
             <p>• Check your spam or junk folder for the reset email</p>
             <p>• The reset link will expire in 24 hours for security</p>
           </div>

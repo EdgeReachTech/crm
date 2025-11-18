@@ -10,7 +10,6 @@ import {
   User, 
   RegisterData, 
   LoginData, 
-  UpdateProfileData,
   PasswordResetData,
   ResetPasswordData
 } from '@/lib/api';
@@ -25,7 +24,7 @@ interface AuthContextType {
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (data: UpdateProfileData) => Promise<void>;
+  updateProfile: (data: any) => Promise<void>;
   requestPasswordReset: (data: PasswordResetData) => Promise<void>;
   resetPassword: (data: ResetPasswordData) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -169,7 +168,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const updateProfile = async (data: UpdateProfileData): Promise<void> => {
+  const updateProfile = async (data: any): Promise<void> => {
     try {
       setIsLoading(true);
       const response = await apiClient.patch<User>('/api/v1/auth/profile', data);

@@ -1,65 +1,71 @@
-import { supabase } from '../config/supabase';
-import { leadSchema, type Lead } from '../models/schemas';
-import { ApiError } from '../utils/errors';
+import { supabase } from "../config/supabase";
+import { leadSchema, type Lead } from "../models/schemas";
+import { ApiError } from "../utils/errors";
 
 export class LeadService {
-  async createLead(leadData: Omit<Lead, 'id' | 'created_at' | 'updated_at'>) {
+  async createLead(leadData: Omit<Lead, "id" | "created_at" | "updated_at">) {
     try {
       const { data: lead, error } = await supabase
-        .from('leads')
+        .from("leads")
         .insert(leadData)
         .select()
         .single();
 
       if (error) throw error;
+
       return leadSchema.parse(lead);
-    } catch (error) {
-      console.error('Error in createLead:', error);
-      throw new ApiError('LeadCreationError', 'Failed to create lead', error);
+    } catch (error: any) {
+      console.error("Error in createLead:", error);
+      throw new ApiError("LeadCreationError", "Failed to create lead", error);
     }
   }
 
   async getLead(leadId: string, tenantId: string) {
     try {
       const { data: lead, error } = await supabase
-        .from('leads')
-        .select('*, users!owner_id(*)')
-        .eq('id', leadId)
-        .eq('tenant_id', tenantId)
+        .from("leads")
+        .select("*, users!owner_id(*)")
+        .eq("id", leadId)
+        .eq("tenant_id", tenantId)
         .single();
 
       if (error) throw error;
-      if (!lead) throw new ApiError('LeadNotFound', 'Lead not found');
+      if (!lead) throw new ApiError("LeadNotFound", "Lead not found");
 
       return leadSchema.parse(lead);
     } catch (error) {
-      console.error('Error in getLead:', error);
-      throw new ApiError('LeadFetchError', 'Failed to fetch lead', error);
+      console.error("Error in getLead:", error);
+      throw new ApiError("LeadFetchError", "Failed to fetch lead", error);
     }
   }
 
-  async listLeads(tenantId: string, filters: {
-    status?: string[];
-    source?: string[];
-    owner_id?: string;
-    search?: string;
-  }, page = 1, limit = 10) {
+  async listLeads(
+    tenantId: string,
+    filters: {
+      status?: string[];
+      source?: string[];
+      owner_id?: string;
+      search?: string;
+    },
+    page = 1,
+    limit = 10
+  ) {
     try {
       const offset = (page - 1) * limit;
       let query = supabase
-        .from('leads')
-        .select('*, users!owner_id(*)', { count: 'exact' })
-        .eq('tenant_id', tenantId);
+        .from("leads")
+        .select("*, users!owner_id(*)", { count: "exact" })
+        .eq("tenant_id", tenantId);
 
       // Apply filters
       if (filters.status?.length) {
-        query = query.in('status', filters.status);
+        query = query.in("status", filters.status);
       }
       if (filters.source?.length) {
-        query = query.in('source', filters.source);
+        query = query.in("source", filters.source);
       }
       if (filters.owner_id) {
-        query = query.eq('owner_id', filters.owner_id);
+        query = query.eq("owner_id", filters.owner_id);
       }
       if (filters.search) {
         query = query.or(
@@ -67,8 +73,12 @@ export class LeadService {
         );
       }
 
-      const { data: leads, error, count } = await query
-        .order('created_at', { ascending: false })
+      const {
+        data: leads,
+        error,
+        count,
+      } = await query
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) throw error;
@@ -78,89 +88,105 @@ export class LeadService {
         total: count ?? 0,
         page,
         pageSize: limit,
-        totalPages: count ? Math.ceil(count / limit) : 0
+        totalPages: count ? Math.ceil(count / limit) : 0,
       };
     } catch (error) {
-      console.error('Error in listLeads:', error);
-      throw new ApiError('LeadListError', 'Failed to list leads', error);
+      console.error("Error in listLeads:", error);
+      throw new ApiError("LeadListError", "Failed to list leads", error);
     }
   }
 
   async updateLead(leadId: string, tenantId: string, updates: Partial<Lead>) {
+
     try {
-      const { data: lead, error } = await supabase
-        .from('leads')
-        .update(updates)
-        .eq('id', leadId)
-        .eq('tenant_id', tenantId)
-        .select()
-        .single();
+     const { data, error } = await supabase
+      .from("leads")
+      .update(updates)
+      .eq("id", leadId)
+      .eq("tenant_id", tenantId)
+      .select();
 
       if (error) throw error;
-      if (!lead) throw new ApiError('LeadNotFound', 'Lead not found');
+      if (!data || data.length === 0) {
+        throw new ApiError("LeadNotFound", "Lead not found");
+      }
+
+      const lead = data[0]; // safe because we checked length
 
       return leadSchema.parse(lead);
     } catch (error) {
-      console.error('Error in updateLead:', error);
-      throw new ApiError('LeadUpdateError', 'Failed to update lead', error);
+      console.error("Error in updateLead:", error);
+      throw new ApiError("LeadUpdateError", "Failed to update lead", error);
     }
   }
 
   async deleteLead(leadId: string, tenantId: string) {
     try {
       const { error } = await supabase
-        .from('leads')
+        .from("leads")
         .delete()
-        .eq('id', leadId)
-        .eq('tenant_id', tenantId);
+        .eq("id", leadId)
+        .eq("tenant_id", tenantId);
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error in deleteLead:', error);
-      throw new ApiError('LeadDeletionError', 'Failed to delete lead', error);
+      console.error("Error in deleteLead:", error);
+      throw new ApiError("LeadDeletionError", "Failed to delete lead", error);
     }
   }
 
   async updateLeadScore(leadId: string, tenantId: string, score: number) {
     try {
       const { data: lead, error } = await supabase
-        .from('leads')
+        .from("leads")
         .update({ score })
-        .eq('id', leadId)
-        .eq('tenant_id', tenantId)
+        .eq("id", leadId)
+        .eq("tenant_id", tenantId)
         .select()
         .single();
 
       if (error) throw error;
-      if (!lead) throw new ApiError('LeadNotFound', 'Lead not found');
+      if (!lead) throw new ApiError("LeadNotFound", "Lead not found");
 
       return leadSchema.parse(lead);
     } catch (error) {
-      console.error('Error in updateLeadScore:', error);
-      throw new ApiError('LeadScoreUpdateError', 'Failed to update lead score', error);
+      console.error("Error in updateLeadScore:", error);
+      throw new ApiError(
+        "LeadScoreUpdateError",
+        "Failed to update lead score",
+        error
+      );
     }
   }
 
-  async updateLeadStatus(leadId: string, tenantId: string, status: Lead['status']) {
+  async updateLeadStatus(
+    leadId: string,
+    tenantId: string,
+    status: Lead["status"]
+  ) {
     try {
       const { data: lead, error } = await supabase
-        .from('leads')
-        .update({ 
+        .from("leads")
+        .update({
           status,
-          last_contacted: status === 'contacted' ? new Date() : undefined
+          last_contacted: status === "contacted" ? new Date() : undefined,
         })
-        .eq('id', leadId)
-        .eq('tenant_id', tenantId)
+        .eq("id", leadId)
+        .eq("tenant_id", tenantId)
         .select()
         .single();
 
       if (error) throw error;
-      if (!lead) throw new ApiError('LeadNotFound', 'Lead not found');
+      if (!lead) throw new ApiError("LeadNotFound", "Lead not found");
 
       return leadSchema.parse(lead);
     } catch (error) {
-      console.error('Error in updateLeadStatus:', error);
-      throw new ApiError('LeadStatusUpdateError', 'Failed to update lead status', error);
+      console.error("Error in updateLeadStatus:", error);
+      throw new ApiError(
+        "LeadStatusUpdateError",
+        "Failed to update lead status",
+        error
+      );
     }
   }
 }

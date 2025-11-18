@@ -20,3 +20,6 @@ calender-api.json
 calendar-api.json
 *-firebase-adminsdk-*.json
 *-service-account-*.json
+
+backend/firebase-adminsdk.json
+backend/google-calendar-key.json

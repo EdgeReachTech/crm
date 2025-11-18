@@ -121,7 +121,7 @@ const doc = {
       email: 'string',
       first_name: 'string',
       last_name: 'string',
-      role: { type: 'string', enum: ['admin', 'manager', 'sales_rep'] },
+      role: { type: 'string', enum: ['manager', 'sales_rep'] },
       status: { type: 'string', enum: ['active', 'inactive', 'pending'] },
       avatar_url: 'string',
       preferences: {

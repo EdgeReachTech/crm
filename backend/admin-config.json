@@ -1,0 +1,76 @@
+{
+  "name": "EdgeReach CRM Admin Setup (Admin Only)",
+  "client": "EdgeReach Technologies",
+  "version": "2.0.0",
+  "tenant_id": "4ab5d82b-30e2-4e42-b369-47d88ffe4f3c",
+  "admin_user": {
+    "role": "admin",
+    "email": "admin@edgereach.tech",
+    "password": "SecureAdmin123!",
+    "first_name": "System",
+    "last_name": "Administrator",
+    "permissions": ["all"],
+    "description": "System administrator with full access to all CRM features",
+    "tenant_id": "4ab5d82b-30e2-4e42-b369-47d88ffe4f3c"
+  },
+  "tenant_config": {
+    "id": "4ab5d82b-30e2-4e42-b369-47d88ffe4f3c",
+    "name": "EdgeReach Technologies",
+    "settings": {
+      "company_size": "startup",
+      "industry": "technology", 
+      "timezone": "UTC",
+      "currency": "USD",
+      "subscription_plan": "enterprise",
+      "features": {
+        "sales_pipeline": true,
+        "email_integration": true,
+        "reporting": true,
+        "api_access": true,
+        "custom_fields": true,
+        "bulk_operations": true,
+        "advanced_analytics": true
+      }
+    }
+  },
+  "sales_stages": [
+    {"name": "New Lead", "stage_order": 1, "stage_type": "lead", "probability_weight": 5},
+    {"name": "Contacted", "stage_order": 2, "stage_type": "lead", "probability_weight": 10},
+    {"name": "Interested", "stage_order": 3, "stage_type": "lead", "probability_weight": 20},
+    {"name": "Qualified Prospect", "stage_order": 4, "stage_type": "prospect", "probability_weight": 30},
+    {"name": "Needs Analysis", "stage_order": 5, "stage_type": "prospect", "probability_weight": 45},
+    {"name": "Solution Proposed", "stage_order": 6, "stage_type": "opportunity", "probability_weight": 65},
+    {"name": "Negotiation", "stage_order": 7, "stage_type": "opportunity", "probability_weight": 85},
+    {"name": "Closed Won", "stage_order": 8, "stage_type": "client", "probability_weight": 100},
+    {"name": "Closed Lost", "stage_order": 9, "stage_type": "client", "probability_weight": 0}
+  ],
+  "security_notes": [
+    "Change password after first login",
+    "Enable 2FA for admin account",
+    "Review permissions regularly",
+    "Use HTTPS in production",
+    "Monitor login activities",
+    "This is an ADMIN ONLY setup"
+  ],
+  "setup_commands": {
+    "node_script": "node scripts/create-admin.js",
+    "sql_script": "psql -f scripts/create-admin.sql",
+    "api_registration": "curl -X POST http://localhost:5000/api/auth/register"
+  },
+  "database_schema": {
+    "version": "sales_crm_v2",
+    "migration_file": "migration_to_sales_crm.sql",
+    "new_tables": [
+      "sales_stages",
+      "activities", 
+      "follow_ups",
+      "revenue_tracking",
+      "sales_targets",
+      "manager_comments",
+      "email_templates",
+      "client_interactions"
+    ]
+  },
+  "created_date": "2025-01-27",
+  "environment": "development"
+}

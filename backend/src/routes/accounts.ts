@@ -19,7 +19,7 @@ router.get(
 // Create new account
 router.post(
   '/',
-  [authMiddleware, requireTenant, requireRole(['admin', 'manager', 'sales_rep'])],
+  [authMiddleware, requireTenant, requireRole(['manager', 'sales_rep'])],
   accountController.createValidation,
   validateRequest,
   (req: Request, res: Response) => accountController.create(req, res)
@@ -42,7 +42,7 @@ router.get(
 // Update account
 router.patch(
   '/:id',
-  [authMiddleware, requireTenant, requireRole(['admin', 'manager', 'sales_rep'])],
+  [authMiddleware, requireTenant, requireRole(['manager', 'sales_rep'])],
   accountController.updateValidation,
   validateRequest,
   (req: Request, res: Response) => accountController.update(req, res)
@@ -51,7 +51,7 @@ router.patch(
 // Delete account
 router.delete(
   '/:id',
-  [authMiddleware, requireTenant, requireRole(['admin', 'manager'])],
+  [authMiddleware, requireTenant, requireRole(['manager'])],
   (req: Request, res: Response) => accountController.delete(req, res)
 );
 

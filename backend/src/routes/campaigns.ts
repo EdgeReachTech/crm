@@ -20,7 +20,7 @@ router.get(
 // Create new campaign
 router.post(
   '/',
-  [authMiddleware, requireTenant, requireRole(['admin', 'manager', 'sales_rep'])],
+  [authMiddleware, requireTenant, requireRole(['manager', 'sales_rep'])],
   campaignController.createValidation,
   validateRequest,
   campaignController.create
@@ -36,7 +36,7 @@ router.get(
 // Update campaign
 router.patch(
   '/:id',
-  [authMiddleware, requireTenant, requireRole(['admin', 'manager', 'sales_rep'])],
+  [authMiddleware, requireTenant, requireRole(['manager', 'sales_rep'])],
   campaignController.updateValidation,
   validateRequest,
   campaignController.update
@@ -45,7 +45,7 @@ router.patch(
 // Delete campaign
 router.delete(
   '/:id',
-  [authMiddleware, requireTenant, requireRole(['admin', 'manager'])],
+  [authMiddleware, requireTenant, requireRole(['manager'])],
   campaignController.delete
 );
 
@@ -53,7 +53,7 @@ router.delete(
 router.post(
   '/:campaignId/test',
   authMiddleware,
-  requireRole(['admin', 'manager', 'sales_rep']),
+  requireRole(['manager', 'sales_rep']),
   [
     validateRequest,
     body('email').isEmail(),

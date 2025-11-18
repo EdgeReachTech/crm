@@ -1,5 +1,6 @@
 // API Configuration and Types
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 export interface ApiResponse<T = any> {
   status: 'success' | 'error';
@@ -14,7 +15,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: 'admin' | 'manager' | 'sales_rep' | 'marketer';
+  role: 'manager' | 'sales_rep';
   status: 'active' | 'inactive' | 'pending';
   avatar_url?: string;
   tenant_id: string;
@@ -41,7 +42,7 @@ export interface RegisterData {
   password: string;
   first_name: string;
   last_name: string;
-  role?: 'admin' | 'manager' | 'sales_rep' | 'marketer';
+  role?: 'manager' | 'sales_rep';
   tenant_id?: string;
 }
 
@@ -50,11 +51,11 @@ export interface LoginData {
   password: string;
 }
 
-export interface UpdateProfileData {
+export interface UpdateUserData {
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-  role?: 'admin' | 'manager' | 'sales_rep' | 'marketer';
+  role?: 'manager' | 'sales_rep';
   preferences?: {
     theme?: 'light' | 'dark' | 'system';
     notification_settings?: {
@@ -94,16 +95,18 @@ export class ApiClient {
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
-    
+
     // Initialize token from localStorage or cookies if available
     if (typeof window !== 'undefined') {
       // First try localStorage
       this.token = localStorage.getItem('auth_token');
-      
+
       // If not in localStorage, try cookies (for middleware compatibility)
       if (!this.token) {
         const cookies = document.cookie.split(';');
-        const authCookie = cookies.find(cookie => cookie.trim().startsWith('auth-token='));
+        const authCookie = cookies.find((cookie) =>
+          cookie.trim().startsWith('auth-token=')
+        );
         if (authCookie) {
           this.token = authCookie.split('=')[1];
           // Also store in localStorage for consistency
@@ -119,11 +122,14 @@ export class ApiClient {
       if (token) {
         localStorage.setItem('auth_token', token);
         // Also set cookie for middleware
-        document.cookie = `auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; samesite=strict`;
+        document.cookie = `auth-token=${token}; path=/; max-age=${
+          7 * 24 * 60 * 60
+        }; samesite=strict`;
       } else {
         localStorage.removeItem('auth_token');
         // Also remove cookie
-        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie =
+          'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     }
   }
@@ -137,7 +143,7 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -159,20 +165,25 @@ export class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        const message =
+          data.message ||
+          (data.details ? JSON.stringify(data.details) : 'An error occurred');
+
         throw new ApiError(
           response.status,
           data.code || 'UNKNOWN_ERROR',
-          data.message || 'An error occurred',
+          message,
           data.details
         );
       }
 
       return data;
     } catch (error) {
+      console.log("api, response catch", error)
       if (error instanceof ApiError) {
         throw error;
       }
-      
+
       // Network or other errors
       throw new ApiError(
         0,
@@ -223,34 +234,38 @@ export class ApiClient {
 
   // Admin methods
   async getPendingUsers(): Promise<ApiResponse<User[]>> {
-    return this.get('/api/v1/auth/admin/pending-users');
+    return this.get('/api/v1/auth/manager/pending-users');
   }
 
   async getAllUsers(): Promise<ApiResponse<User[]>> {
-    return this.get('/api/v1/auth/admin/all-users');
+    return this.get('/api/v1/auth/manager/all-users');
   }
 
-  async getUsersByStatus(status: 'active' | 'inactive' | 'pending'): Promise<ApiResponse<User[]>> {
-    return this.get(`/api/v1/auth/admin/users?status=${status}`);
+  async getUsersByStatus(
+    status: 'active' | 'inactive' | 'pending'
+  ): Promise<ApiResponse<User[]>> {
+    return this.get(`/api/v1/auth/manager/users?status=${status}`);
   }
 
-  async approveUser(userId: string, role?: 'admin' | 'manager' | 'sales_rep' | 'marketer') {
-    return this.patch(`/api/v1/auth/admin/approve-user/${userId}`, { role });
+  async approveUser(userId: string, role?: 'manager' | 'sales_rep') {
+    return this.patch(`/api/v1/auth/manager/approve-user/${userId}`, { role });
   }
 
   async rejectUser(userId: string, reason?: string) {
-    return this.delete(`/api/v1/auth/admin/reject-user/${userId}`);
+    return this.delete(`/api/v1/auth/manager/reject-user/${userId}`);
   }
 
   async updateUserStatus(userId: string, status: 'active' | 'inactive') {
-    return this.patch(`/api/v1/auth/admin/user-status/${userId}`, { status });
+    return this.patch(`/api/v1/auth/manager/user-status/${userId}`, { status });
   }
 
-  async updateUserRole(userId: string, role: 'admin' | 'manager' | 'sales_rep' | 'marketer') {
-    return this.patch(`/api/v1/auth/admin/user-role/${userId}`, { role });
+  async updateUserRole(userId: string, role: 'manager' | 'sales_rep') {
+    return this.patch(`/api/v1/auth/manager/user-role/${userId}`, { role });
   }
 
-  async verifyToken(data: { idToken: string }): Promise<ApiResponse<{ user: any; token: string }>> {
+  async verifyToken(data: {
+    idToken: string;
+  }): Promise<ApiResponse<{ user: any; token: string }>> {
     return this.post('/api/v1/auth/verify-token', data);
   }
 }

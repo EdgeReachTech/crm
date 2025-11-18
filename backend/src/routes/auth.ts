@@ -74,38 +74,38 @@ router.delete('/account',
   authController.deleteAccount
 );
 
-// Admin-only routes for user management
-router.get('/admin/pending-users',
+// Manager-only routes for user management
+router.get('/manager/pending-users',
   authMiddleware,
   authController.getPendingUsers
 );
 
-router.get('/admin/all-users',
+router.get('/manager/all-users',
   authMiddleware,
   authController.getAllUsers
 );
 
-router.get('/admin/users',
+router.get('/manager/users',
   authMiddleware,
   authController.getUsersByStatus
 );
 
-router.patch('/admin/approve-user/:userId',
+router.patch('/manager/approve-user/:userId',
   authMiddleware,
   authController.approveUser
 );
 
-router.delete('/admin/reject-user/:userId',
+router.delete('/manager/reject-user/:userId',
   authMiddleware,
   authController.rejectUser
 );
 
-router.patch('/admin/user-status/:userId',
+router.patch('/manager/user-status/:userId',
   authMiddleware,
   authController.updateUserStatus
 );
 
-router.patch('/admin/user-role/:userId',
+router.patch('/manager/user-role/:userId',
   authMiddleware,
   authController.updateUserRole
 );

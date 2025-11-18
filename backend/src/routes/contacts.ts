@@ -35,7 +35,7 @@ router.put('/:id',
 
 router.delete('/:id', 
   requireSameTenant,
-  requireRole(['admin', 'manager']),
+  requireRole(['manager']),
   ContactController.getContactValidation,
   (req: Request, res: Response) => contactController.deleteContact(req, res)
 );
