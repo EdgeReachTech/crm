@@ -121,7 +121,7 @@ export default function LeadForm() {
         </div>
     );
     
-    if (error && !initialData) return (
+    if (error && leadId) return (
       <div className="flex items-center justify-center min-h-64">
         <div className="text-red-600 text-lg">Error: {error}</div>
       </div>
@@ -172,13 +172,15 @@ export default function LeadForm() {
     try {
       setMessage(null);
 
+      let response;
+
       if(initialData?.id){
-        updateLead(initialData?.id, data)
+        response = await updateLead(initialData?.id, data)
       }else {
-        createLead(data as any);
+        response = await createLead(data as any);
       }
 
-      if(!isLoading && error === null){
+      if(response?.id){
         router.push("/dashboard")
       }
     } catch {
@@ -524,7 +526,7 @@ export default function LeadForm() {
           </div>
 
           {/* MESSAGE */}
-          {message || error !== null && (
+          {(error || message) && (
             <div className="mt-4 rounded border border-red-200 bg-red-50 p-2 text-red-800">
               {error ?? message}
             </div>

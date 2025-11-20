@@ -141,11 +141,10 @@ function leadReducer(state: LeadState, action: LeadAction): LeadState {
     case 'SET_CURRENT_LEAD':
       return { ...state, currentLead: action.payload, isLoading: false };
     case 'ADD_LEAD':
-      console.log({createNewLeads: newLeads })
       return {
         ...state,
          leads: {
-            items: [action.payload, ...newLeads],
+            items: [action.payload, ...state.leads.items],
             pagination: {
               ...newPagination,
               total: newPagination.total + 1,

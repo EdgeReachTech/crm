@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useLeads } from "@/contexts/LeadContext";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -18,6 +18,7 @@ import {
 export default function LeadPage() {
   const { leadId } = useParams(); // gets 12b66c58-94d7-4c60-8c98-99ae4c24d66e
   const { fetchLead, isLoading, error, currentLead } = useLeads();
+  const router = useRouter();
 
   useEffect(() => {
     if (leadId) {
@@ -82,6 +83,9 @@ export default function LeadPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <button onClick={() => {
+          router.push("/dashboard")
+        }} className='border border-black/50 px-4 py-2 mb-4'>Back to dashboard</button>
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between">
