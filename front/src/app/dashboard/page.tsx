@@ -18,14 +18,16 @@ import {
 } from '@heroicons/react/24/outline';
 import LeadDetailsCard from './components/LeadDetailsCard';
 import { useLeads } from '@/contexts/LeadContext';
+import Pagination from '@/components/Pagination';
 
-// Define the proper type for your leads response
-interface LeadsResponse {
-  items: any[];
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
+interface ILeads {
+  items: any;
+  pagination:{
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }
 }
 
 export default function DashboardPage() {
@@ -41,19 +43,14 @@ function DashboardContent() {
   const { fetchLeads, isLoading, leads, error } = useLeads();
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Properly type and handle the leads data structure
-  const leadsData = leads as any;
-  const items = leadsData?.items || [];
-  // const page = leadsData?.page || 1;
-  const pageSize = leadsData?.pageSize || 10;
-  const total = leadsData?.total || 0;
-  const totalPages = leadsData?.totalPages || 1;
-
+  const leadData = leads.items as unknown as ILeads;
+  const items = leadData.items || [];
+  const pagination = leadData?.pagination;
 
   const stats = [
     {
       name: 'Total Leads',
-      value: total.toString(),
+      value: pagination?.total.toString(),
       change: '+12%',
       changeType: 'positive' as const,
       icon: UsersIcon,
@@ -121,12 +118,16 @@ function DashboardContent() {
   ];
 
   useEffect(() => {
+    fetchLeads()
+  },[])
+
+  useEffect(() => {
     fetchLeads({ page: currentPage });
   }, [currentPage]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handlePrevious = () => {
@@ -136,7 +137,7 @@ function DashboardContent() {
   };
 
   const handleNext = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < pagination?.totalPages) {
       handlePageChange(currentPage + 1);
     }
   };
@@ -146,7 +147,7 @@ function DashboardContent() {
     const pages = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    let endPage = Math.min(pagination?.totalPages, startPage + maxVisiblePages - 1);
 
     // Adjust start page if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages) {
@@ -220,9 +221,9 @@ function DashboardContent() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1">
+      {/* <div className="grid grid-cols-1"> */}
         {/* Recent Activity */}
-        <Card className="transition-shadow duration-200 hover:shadow-lg">
+        {/* <Card className="transition-shadow duration-200 hover:shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <CardTitle className="text-xl">Recent Activity</CardTitle>
           </CardHeader>
@@ -249,8 +250,8 @@ function DashboardContent() {
               ))}
             </div>
           </CardContent>
-        </Card>
-      </div>
+        </Card> */}
+      {/* </div> */}
 
       {/* Role-specific content */}
       {user?.role === 'manager' && (
@@ -287,10 +288,10 @@ function DashboardContent() {
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-              All Leads ({total})
+              All Leads ({pagination?.total})
             </h3>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Page {currentPage} of {totalPages}
+              Page {currentPage} of {pagination?.totalPages}
             </p>
           </div>
           <div className="flex gap-3">
@@ -300,7 +301,7 @@ function DashboardContent() {
         </div>
 
         {/* Leads Grid */}
-        {(isLoading && items.length === 0) ? (
+        {(isLoading && !items.length) ? (
           <div className="flex items-center justify-center py-12">
             <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
           </div>
@@ -335,77 +336,14 @@ function DashboardContent() {
             </div>
 
             {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-neutral-200 pt-6 dark:border-neutral-700">
-                <div className="flex flex-1 justify-between sm:hidden">
-                  <Button
-                    variant="outline"
-                    onClick={handlePrevious}
-                    disabled={currentPage === 1}
-                    leftIcon={<ChevronLeftIcon className="h-4 w-4" />}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleNext}
-                    disabled={currentPage === totalPages}
-                    rightIcon={<ChevronRightIcon className="h-4 w-4" />}
-                  >
-                    Next
-                  </Button>
-                </div>
-                <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm text-neutral-700 dark:text-neutral-300">
-                      Showing{' '}
-                      <span className="font-medium">
-                        {(currentPage - 1) * pageSize + 1}
-                      </span>{' '}
-                      to{' '}
-                      <span className="font-medium">
-                        {Math.min(currentPage * pageSize, total)}
-                      </span>{' '}
-                      of <span className="font-medium">{total}</span> results
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant="outline"
-                      onClick={handlePrevious}
-                      disabled={currentPage === 1}
-                      className="px-3"
-                    >
-                      <ChevronLeftIcon className="h-4 w-4" />
-                    </Button>
-
-                    {getPageNumbers().map((pageNum) => (
-                      <Button
-                        key={pageNum}
-                        // variant={currentPage === pageNum ? "default" : "outline"}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`px-4 ${
-                          currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
-                            : ''
-                        }`}
-                      >
-                        {pageNum}
-                      </Button>
-                    ))}
-
-                    <Button
-                      variant="outline"
-                      onClick={handleNext}
-                      disabled={currentPage === totalPages}
-                      className="px-3"
-                    >
-                      <ChevronRightIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
+            <Pagination
+              pagination={pagination}
+              handlePrevious={handlePrevious}
+              currentPage={currentPage}
+              handleNext={handleNext}
+              getPageNumbers={getPageNumbers}
+              handlePageChange={handlePageChange}            
+            />
           </>
         )}
       </div>

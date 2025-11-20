@@ -72,16 +72,18 @@ export interface LeadFilters {
 
 // State
 interface LeadState {
-  leads: Lead[];
+  leads: {
+    items:Lead[],
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
   currentLead: Lead | null;
   isLoading: boolean;
   error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
   filters: LeadFilters;
 }
 
@@ -99,21 +101,27 @@ type LeadAction =
 
 // Initial state
 const initialState: LeadState = {
-  leads: [],
+  leads: {
+    items: [],
+    pagination: {
+      page: 1,
+      limit: 20,
+      total: 0,
+      totalPages: 0,
+    },
+  },
   currentLead: null,
   isLoading: false,
   error: null,
-  pagination: {
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-  },
+  
   filters: {},
 };
 
 // Reducer
 function leadReducer(state: LeadState, action: LeadAction): LeadState {
+
+  let newLeads = (state as any).leads.items.items;
+  let newPagination = state.leads.pagination;
 
   switch (action.type) {
     case 'SET_LOADING':
@@ -123,41 +131,50 @@ function leadReducer(state: LeadState, action: LeadAction): LeadState {
     case 'SET_LEADS':
       return {
         ...state,
-        leads: action.payload.leads,
-        pagination: action.payload.pagination,
+        leads: {
+          items: action.payload.leads,
+          pagination: action.payload.pagination
+        },
         isLoading: false,
         error: null,
       };
     case 'SET_CURRENT_LEAD':
       return { ...state, currentLead: action.payload, isLoading: false };
     case 'ADD_LEAD':
-      const addLeads = (state as any)?.leads?.items;
-      console.log({state})
+      console.log({createNewLeads: newLeads })
       return {
         ...state,
-        leads: [action.payload, ...addLeads],
-        pagination: { ...state.pagination, total: (state as any).leads.total + 1 },
+         leads: {
+            items: [action.payload, ...newLeads],
+            pagination: {
+              ...newPagination,
+              total: newPagination.total + 1,
+            },
+          },
       };
     case 'UPDATE_LEAD':
-      const leads = (state as any)?.leads?.items;
       return {
         ...state,
-        leads: leads.map((lead: any) =>
-          lead.id === action.payload.id ? action.payload : lead
-        ),
+         leads: {
+            items: newLeads.map((lead: any) =>
+              lead.id === action.payload.id ? action.payload : lead
+            ),
+            pagination: newPagination,
+          },
         currentLead:
           state.currentLead?.id === action.payload.id
             ? action.payload
             : state.currentLead,
       };
     case 'DELETE_LEAD':
-      const deleteLeads = (state as any)?.leads?.items;
       return {
         ...state,
-        leads: deleteLeads.filter((lead: any) => lead.id !== action.payload),
+        leads: {
+          items: newLeads.filter((lead: any) => lead !== (action as any).payload.id),
+          pagination: newPagination
+        },
         currentLead:
           state.currentLead?.id === action.payload ? null : state.currentLead,
-        pagination: { ...state.pagination, total: (state as any).leads.total - 1 },
       };
     case 'SET_FILTERS':
       return { ...state, filters: { ...state.filters, ...action.payload } };

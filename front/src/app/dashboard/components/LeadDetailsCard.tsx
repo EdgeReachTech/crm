@@ -21,11 +21,11 @@ interface LeadDetailsCardProps {
   onDelete?: () => void;
 }
 
-export default function LeadDetailsCard({ lead, onDelete }: LeadDetailsCardProps) {
+export default function LeadDetailsCard({ lead }: LeadDetailsCardProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const { createLead, isLoading, error, clearError, deleteLead } = useLeads();
+  const { createLead, isLoading, error, clearError, deleteLead, fetchLeads } = useLeads();
 
   const handleEdit = () => {
     router.push(`/lead/create-lead?lead_id=${lead.id}`);
@@ -42,7 +42,8 @@ export default function LeadDetailsCard({ lead, onDelete }: LeadDetailsCardProps
     const duplicate = { ...lead, firstName: lead.first_name, lastName: lead.last_name }
     const response = await createLead(duplicate);
     if(response?.id){
-      window.location.reload();
+      await fetchLeads()
+      setShowDropdown(false);
     }
   };
 
@@ -67,7 +68,8 @@ export default function LeadDetailsCard({ lead, onDelete }: LeadDetailsCardProps
     setIsDeleting(true);
     try {
      await deleteLead(lead?.id);
-      window.location.reload();
+     await fetchLeads()
+      setShowDropdown(false);
     } catch (err) {
       alert('Failed to delete lead: ' + ((err as any)?.message || 'Unknown error'));
     } finally {

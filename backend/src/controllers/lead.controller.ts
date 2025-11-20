@@ -179,7 +179,7 @@ export class LeadController {
       };
 
       const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
+      const limit = parseInt(req.query.limit as string) || 15;
 
       const results = await this.leadService.listLeads(
         req.user.tenant_id,
@@ -188,7 +188,17 @@ export class LeadController {
         limit
       );
 
-      res.json({ success: true, data: results });
+      const resultObject = {
+        items: results.items,
+        pagination: {
+          total: results.total,
+          page: results.page,
+          pageSize: results.pageSize,
+          totalPages: results.totalPages
+        }
+      }
+
+      res.json({ success: true, data: resultObject });
     } catch (error) {
       if (error instanceof ApiError) {
         res.status(400).json({
