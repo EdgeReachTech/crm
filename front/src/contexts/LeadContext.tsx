@@ -1,7 +1,15 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+} from 'react';
 import { ApiClient } from '@/lib/api';
+
+import { getErrorMessages } from '@/utils/errors';
+import { formatEnumErrorMessage } from '@/utils/formatError';
 
 // Types
 export interface Lead {
@@ -13,7 +21,14 @@ export interface Lead {
   company?: string;
   title?: string;
   source: string;
-  status: 'new' | 'contacted' | 'qualified' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
+  status:
+    | 'new'
+    | 'contacted'
+    | 'qualified'
+    | 'proposal'
+    | 'negotiation'
+    | 'closed_won'
+    | 'closed_lost';
   score?: number;
   value?: number;
   notes?: string;
@@ -57,16 +72,18 @@ export interface LeadFilters {
 
 // State
 interface LeadState {
-  leads: Lead[];
+  leads: {
+    items:Lead[],
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  };
   currentLead: Lead | null;
   isLoading: boolean;
   error: string | null;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
   filters: LeadFilters;
 }
 
@@ -84,56 +101,79 @@ type LeadAction =
 
 // Initial state
 const initialState: LeadState = {
-  leads: [],
+  leads: {
+    items: [],
+    pagination: {
+      page: 1,
+      limit: 20,
+      total: 0,
+      totalPages: 0,
+    },
+  },
   currentLead: null,
   isLoading: false,
   error: null,
-  pagination: {
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-  },
+  
   filters: {},
 };
 
 // Reducer
 function leadReducer(state: LeadState, action: LeadAction): LeadState {
+
+  let newLeads = (state as any).leads.items.items;
+  let newPagination = state.leads.pagination;
+
   switch (action.type) {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_ERROR':
-      return { ...state, error: action.payload, isLoading: false };
+      return { ...state, error: action.payload };
     case 'SET_LEADS':
       return {
         ...state,
-        leads: action.payload.leads,
-        pagination: action.payload.pagination,
+        leads: {
+          items: action.payload.leads,
+          pagination: action.payload.pagination
+        },
         isLoading: false,
         error: null,
       };
     case 'SET_CURRENT_LEAD':
-      return { ...state, currentLead: action.payload };
+      return { ...state, currentLead: action.payload, isLoading: false };
     case 'ADD_LEAD':
       return {
         ...state,
-        leads: [action.payload, ...state.leads],
-        pagination: { ...state.pagination, total: state.pagination.total + 1 },
+         leads: {
+            items: [action.payload, ...state.leads.items],
+            pagination: {
+              ...newPagination,
+              total: newPagination.total + 1,
+            },
+          },
       };
     case 'UPDATE_LEAD':
       return {
         ...state,
-        leads: state.leads.map(lead =>
-          lead.id === action.payload.id ? action.payload : lead
-        ),
-        currentLead: state.currentLead?.id === action.payload.id ? action.payload : state.currentLead,
+         leads: {
+            items: newLeads.map((lead: any) =>
+              lead.id === action.payload.id ? action.payload : lead
+            ),
+            pagination: newPagination,
+          },
+        currentLead:
+          state.currentLead?.id === action.payload.id
+            ? action.payload
+            : state.currentLead,
       };
     case 'DELETE_LEAD':
       return {
         ...state,
-        leads: state.leads.filter(lead => lead.id !== action.payload),
-        currentLead: state.currentLead?.id === action.payload ? null : state.currentLead,
-        pagination: { ...state.pagination, total: state.pagination.total - 1 },
+        leads: {
+          items: newLeads.filter((lead: any) => lead !== (action as any).payload.id),
+          pagination: newPagination
+        },
+        currentLead:
+          state.currentLead?.id === action.payload ? null : state.currentLead,
       };
     case 'SET_FILTERS':
       return { ...state, filters: { ...state.filters, ...action.payload } };
@@ -153,7 +193,7 @@ interface LeadContextType extends LeadState {
   updateLead: (id: string, data: UpdateLeadData) => Promise<Lead>;
   deleteLead: (id: string) => Promise<void>;
   updateLeadScore: (id: string, score: number) => Promise<void>;
-  
+
   // Utility functions
   setFilters: (filters: LeadFilters) => void;
   clearFilters: () => void;
@@ -168,100 +208,180 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(leadReducer, initialState);
   const apiClient = new ApiClient();
 
-  const fetchLeads = useCallback(async (filters: LeadFilters = {}) => {
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
+  const fetchLeads = useCallback(
+    async (filters: LeadFilters = {}) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
 
-      const queryParams = new URLSearchParams();
-      Object.entries({ ...state.filters, ...filters }).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          queryParams.append(key, value.toString());
-        }
-      });
+        const queryParams = new URLSearchParams();
 
-      const response = await apiClient.get(`/api/leads?${queryParams.toString()}`) as { data: any };
-      
-      dispatch({
-        type: 'SET_LEADS',
-        payload: {
-          leads: (response.data.leads || response.data) as Lead[],
-          pagination: response.data.pagination || {
-            page: 1,
-            limit: 20,
-            total: (response.data.length || 0) as number,
-            totalPages: 1,
+        Object.entries({ ...state.filters, ...filters }).forEach(
+          ([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              queryParams.append(key, String(value));
+            }
+          }
+        );
+
+        const res = await apiClient.get(
+          `/api/v1/leads?${queryParams.toString()}`
+        );
+
+        dispatch({
+          type: 'SET_LEADS',
+          payload: {
+            leads: (res as any).data.leads || res.data,
+            pagination: (res as any).data.pagination,
           },
-        },
-      });
+        });
 
-      if (filters && Object.keys(filters).length > 0) {
-        dispatch({ type: 'SET_FILTERS', payload: filters });
+        if (Object.keys(filters).length > 0) {
+          dispatch({ type: 'SET_FILTERS', payload: filters });
+        }
+      } catch (error: any) {
+        dispatch({ type: 'SET_LOADING', payload: false });
+        dispatch({
+          type: 'SET_ERROR',
+          payload: error.message || 'Failed to fetch leads',
+        });
+        console.error('fetchLeads error:', error);
       }
-    } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to fetch leads' });
-      console.error('Error fetching leads:', error);
-    }
-  }, [state.filters]);
+    },
+    [state.filters]
+  );
 
   const fetchLead = useCallback(async (id: string) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      const response = await apiClient.get(`/api/leads/${id}`) as { data: Lead };
+      const response = (await apiClient.get(`/api/v1/leads/${id}`)) as {
+        data: Lead;
+      };
+
       dispatch({ type: 'SET_CURRENT_LEAD', payload: response.data });
+
     } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to fetch lead' });
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error.message || 'Failed to fetch lead',
+      });
       console.error('Error fetching lead:', error);
     }
   }, []);
 
-  const createLead = useCallback(async (data: CreateLeadData): Promise<Lead> => {
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
 
-      const response = await apiClient.post('/api/leads', data) as { data: Lead };
-      const newLead = response.data;
+  const createLead = useCallback(
+    async (data: CreateLeadData): Promise<Lead> => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
 
-      dispatch({ type: 'ADD_LEAD', payload: newLead });
-      return newLead;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create lead';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      throw new Error(errorMessage);
-    }
-  }, []);
+        const response = (await apiClient.post(
+          '/api/v1/leads/create',
+          data
+        )) as { data: Lead };
 
-  const updateLead = useCallback(async (id: string, data: UpdateLeadData): Promise<Lead> => {
-    try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      dispatch({ type: 'SET_ERROR', payload: null });
+        const newLead = response.data;
 
-      const response = await apiClient.put(`/api/leads/${id}`, data) as { data: Lead };
-      const updatedLead = response.data;
+        dispatch({ type: 'ADD_LEAD', payload: newLead });
+        return newLead;
+      } catch (error: any) {
+        let errorMessage = 'Failed to create lead';
 
-      dispatch({ type: 'UPDATE_LEAD', payload: updatedLead });
-      return updatedLead;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to update lead';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      throw new Error(errorMessage);
-    }
-  }, []);
+        // Check for detailed validation errors from backend
+        if (error.details && Array.isArray(error.details)) {
+          errorMessage = error.details
+            .map(
+              (e: { path: string; message: string }) =>
+                `${e.path}: ${e.message}`
+            )
+            .join('; ');
+        } else {
+          let messages = getErrorMessages(error);
+          messages = messages.map((msg) => formatEnumErrorMessage(msg));
+          errorMessage = messages.join(', ');
+        }
+
+        // console.error('🔴 FORMATTED ERROR:', errorMessage);
+        dispatch({ type: 'SET_ERROR', payload: errorMessage });
+        throw new Error(errorMessage);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    []
+  );
+
+  const updateLead = useCallback(
+    async (id: string, data: UpdateLeadData): Promise<Lead> => {
+
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        dispatch({ type: 'SET_ERROR', payload: null });
+
+        const response = (await apiClient.put(`/api/v1/leads/update/${id}`, data)) as {
+          data: Lead;
+        };
+        const updatedLead = response.data;
+
+        dispatch({ type: 'UPDATE_LEAD', payload: updatedLead });
+        return updatedLead;
+      } catch (error: any) {
+         let errorMessage = 'Failed to update lead';
+
+        // Check for detailed validation errors from backend
+        if (error.details && Array.isArray(error.details)) {
+          errorMessage = error.details
+            .map(
+              (e: { path: string; message: string }) =>
+                `${e.path}: ${e.message}`
+            )
+            .join('; ');
+        } else {
+          let messages = getErrorMessages(error);
+          messages = messages.map((msg) => formatEnumErrorMessage(msg));
+          errorMessage = messages.join(', ');
+        }
+
+        // console.error('🔴 FORMATTED ERROR:', errorMessage);
+        dispatch({ type: 'SET_ERROR', payload: errorMessage });
+        throw new Error(errorMessage);
+      }finally{
+         dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    []
+  );
 
   const deleteLead = useCallback(async (id: string) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      // dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      await apiClient.delete(`/api/leads/${id}`);
+      await apiClient.delete(`/api/v1/leads/delete/${id}`);
       dispatch({ type: 'DELETE_LEAD', payload: id });
     } catch (error: any) {
-      const errorMessage = error.message || 'Failed to delete lead';
-      dispatch({ type: 'SET_ERROR', payload: errorMessage });
-      throw new Error(errorMessage);
+       let errorMessage = 'Failed to delete lead';
+
+        // Check for detailed validation errors from backend
+        if (error.details && Array.isArray(error.details)) {
+          errorMessage = error.details
+            .map(
+              (e: { path: string; message: string }) =>
+                `${e.path}: ${e.message}`
+            )
+            .join('; ');
+        } else {
+          let messages = getErrorMessages(error);
+          messages = messages.map((msg) => formatEnumErrorMessage(msg));
+          errorMessage = messages.join(', ');
+        }
+
+        // console.error('🔴 FORMATTED ERROR:', errorMessage);
+        dispatch({ type: 'SET_ERROR', payload: errorMessage });
+        throw new Error(errorMessage);
     }
   }, []);
 
@@ -270,7 +390,9 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      const response = await apiClient.patch(`/api/leads/${id}/score`, { score }) as { data: Lead };
+      const response = (await apiClient.patch(`/api/leads/${id}/score`, {
+        score,
+      })) as { data: Lead };
       const updatedLead = response.data;
 
       dispatch({ type: 'UPDATE_LEAD', payload: updatedLead });
@@ -311,11 +433,7 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
     clearCurrentLead,
   };
 
-  return (
-    <LeadContext.Provider value={value}>
-      {children}
-    </LeadContext.Provider>
-  );
+  return <LeadContext.Provider value={value}>{children}</LeadContext.Provider>;
 }
 
 // Hook

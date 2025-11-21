@@ -1,5 +1,6 @@
 // API Configuration and Types
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001';
 
 export interface ApiResponse<T = any> {
   status: 'success' | 'error';
@@ -94,16 +95,18 @@ export class ApiClient {
 
   constructor(baseURL: string = API_BASE_URL) {
     this.baseURL = baseURL;
-    
+
     // Initialize token from localStorage or cookies if available
     if (typeof window !== 'undefined') {
       // First try localStorage
       this.token = localStorage.getItem('auth_token');
-      
+
       // If not in localStorage, try cookies (for middleware compatibility)
       if (!this.token) {
         const cookies = document.cookie.split(';');
-        const authCookie = cookies.find(cookie => cookie.trim().startsWith('auth-token='));
+        const authCookie = cookies.find((cookie) =>
+          cookie.trim().startsWith('auth-token=')
+        );
         if (authCookie) {
           this.token = authCookie.split('=')[1];
           // Also store in localStorage for consistency
@@ -119,11 +122,14 @@ export class ApiClient {
       if (token) {
         localStorage.setItem('auth_token', token);
         // Also set cookie for middleware
-        document.cookie = `auth-token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; samesite=strict`;
+        document.cookie = `auth-token=${token}; path=/; max-age=${
+          7 * 24 * 60 * 60
+        }; samesite=strict`;
       } else {
         localStorage.removeItem('auth_token');
         // Also remove cookie
-        document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie =
+          'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
     }
   }
@@ -137,7 +143,7 @@ export class ApiClient {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -159,20 +165,25 @@ export class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        const message =
+          data.message ||
+          (data.details ? JSON.stringify(data.details) : 'An error occurred');
+
         throw new ApiError(
           response.status,
           data.code || 'UNKNOWN_ERROR',
-          data.message || 'An error occurred',
+          message,
           data.details
         );
       }
 
       return data;
     } catch (error) {
+      console.log("api, response catch", error)
       if (error instanceof ApiError) {
         throw error;
       }
-      
+
       // Network or other errors
       throw new ApiError(
         0,
@@ -250,7 +261,9 @@ export class ApiClient {
     return this.patch(`/api/v1/auth/manager/user-role/${userId}`, { role });
   }
 
-  async verifyToken(data: { idToken: string }): Promise<ApiResponse<{ user: any; token: string }>> {
+  async verifyToken(data: {
+    idToken: string;
+  }): Promise<ApiResponse<{ user: any; token: string }>> {
     return this.post('/api/v1/auth/verify-token', data);
   }
 }

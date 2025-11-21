@@ -1,0 +1,10 @@
+{
+  "name": "crm-root",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --shell pwsh \"npm --prefix backend run dev\" \"npm --prefix front run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

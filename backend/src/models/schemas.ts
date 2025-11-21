@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Common fields schema
 export const commonFields = {
@@ -55,15 +55,15 @@ export const registerSchema = z.object({
     last_name: z.string().min(1),
     role: z.enum(['manager', 'sales_rep']).default('sales_rep'),
     tenant_id: z.string().uuid().optional(),
-    idToken: z.string().optional() // For Firebase-based registration
-  })
+    idToken: z.string().optional(), // For Firebase-based registration
+  }),
 });
 
 export const loginSchema = z.object({
   body: z.object({
     email: z.string().email(),
-    password: z.string()
-  })
+    password: z.string(),
+  }),
 });
 
 export const updateProfileSchema = z.object({
@@ -85,35 +85,51 @@ export const updateProfileSchema = z.object({
 });
 
 // Lead Schema - Updated for new sales CRM structure
+// Lead Schema - Updated for new sales CRM structure
 export const leadSchema = z.object({
   ...commonFields,
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
+  first_name: z.string().min(1),
+  last_name: z.string().min(1),
   email: z.string().email(),
   company: z.string().min(1),
   phone: z.string().optional(),
   title: z.string().optional(),
+  // source: z.enum(['website', 'linkedin', 'referral', 'cold_outreach', 'event', 'partner', 'other']),
+  // source_details: z.string().optional(),
+  // title: z.string().optional(),
   source: z.enum(['website', 'linkedin', 'referral', 'cold_outreach', 'event', 'partner', 'other']),
   source_details: z.string().optional(),
   status: z.enum(['new', 'contacted', 'qualified', 'unqualified']),
   interest_level: z.enum(['hot', 'warm', 'cold']).default('cold'),
   qualification_status: z.enum(['unqualified', 'marketing_qualified', 'sales_qualified']).default('unqualified'),
-  current_stage_id: z.string().uuid().optional(),
   score: z.number().min(0).max(100),
   budget_range: z.string().optional(),
   timeline: z.string().optional(),
   pain_points: z.string().optional(),
-  decision_maker_contact: z.string().uuid().optional(),
+  current_stage_id: z.string().uuid().optional().nullable(),
+  decision_maker_contact: z.string().uuid().optional().nullable(),
   next_follow_up: z.string().transform(str => new Date(str)).optional(),
   converted_to_opportunity: z.boolean().default(false),
-  conversion_date: z.string().transform(str => new Date(str)).optional(),
+  conversion_date: z.string().nullable().optional()
+    .transform(str => str ? new Date(str) : null),
   owner_id: z.string().uuid(),
   notes: z.string().optional(),
   last_contacted: z.string().transform(str => new Date(str)).optional(),
+  // last_contacted: z.string().transform(str => new Date(str)).optional(),
 });
 
 export type Lead = z.infer<typeof leadSchema>;
 
+export const updateLeadSchema = leadSchema
+  .omit({
+    id: true,
+    tenant_id: true,
+    created_at: true,
+    updated_at: true,
+  })
+  .partial();
+
+// Opportunity Schema - Enhanced for sales CRM
 // Opportunity Schema - Enhanced for sales CRM
 export const opportunitySchema = z.object({
   ...commonFields,
@@ -201,49 +217,80 @@ export type Account = z.infer<typeof accountSchema>;
 export const campaignSchema = z.object({
   ...commonFields,
   name: z.string().min(1),
-  type: z.enum(['email', 'newsletter', 'nurture', 'webinar', 'social', 'event']),
-  status: z.enum(['draft', 'scheduled', 'active', 'paused', 'completed', 'cancelled']),
+  type: z.enum([
+    "email",
+    "newsletter",
+    "nurture",
+    "webinar",
+    "social",
+    "event",
+  ]),
+  status: z.enum([
+    "draft",
+    "scheduled",
+    "active",
+    "paused",
+    "completed",
+    "cancelled",
+  ]),
   owner_id: z.string().uuid(),
   description: z.string().optional(),
   start_date: z.date(),
   end_date: z.date().optional(),
   budget: z.number().min(0).optional(),
   segment: z.object({
-    filters: z.array(z.object({
-      field: z.string(),
-      operator: z.enum(['equals', 'not_equals', 'contains', 'not_contains', 'greater_than', 'less_than']),
-      value: z.any(),
-    })),
+    filters: z.array(
+      z.object({
+        field: z.string(),
+        operator: z.enum([
+          "equals",
+          "not_equals",
+          "contains",
+          "not_contains",
+          "greater_than",
+          "less_than",
+        ]),
+        value: z.any(),
+      })
+    ),
   }),
   template: z.object({
     subject: z.string(),
     content: z.string(),
     variables: z.array(z.string()).optional(),
   }),
-  metrics: z.object({
-    sent: z.number().default(0),
-    opened: z.number().default(0),
-    clicked: z.number().default(0),
-    converted: z.number().default(0),
-    revenue: z.number().default(0),
-  }).optional(),
-  settings: z.object({
-    track_opens: z.boolean().default(true),
-    track_clicks: z.boolean().default(true),
-    schedule_type: z.enum(['immediate', 'scheduled', 'recurring']).optional(),
-    schedule_config: z.object({
-      frequency: z.enum(['once', 'daily', 'weekly', 'monthly']).optional(),
-      time: z.string().optional(), // HH:mm format
-      days: z.array(z.number().min(0).max(6)).optional(), // 0-6 for Sunday-Saturday
-    }).optional(),
-  }).optional(),
-  utm: z.object({
-    source: z.string(),
-    medium: z.string(),
-    campaign: z.string(),
-    term: z.string().optional(),
-    content: z.string().optional(),
-  }).optional(),
+  metrics: z
+    .object({
+      sent: z.number().default(0),
+      opened: z.number().default(0),
+      clicked: z.number().default(0),
+      converted: z.number().default(0),
+      revenue: z.number().default(0),
+    })
+    .optional(),
+  settings: z
+    .object({
+      track_opens: z.boolean().default(true),
+      track_clicks: z.boolean().default(true),
+      schedule_type: z.enum(["immediate", "scheduled", "recurring"]).optional(),
+      schedule_config: z
+        .object({
+          frequency: z.enum(["once", "daily", "weekly", "monthly"]).optional(),
+          time: z.string().optional(), // HH:mm format
+          days: z.array(z.number().min(0).max(6)).optional(), // 0-6 for Sunday-Saturday
+        })
+        .optional(),
+    })
+    .optional(),
+  utm: z
+    .object({
+      source: z.string(),
+      medium: z.string(),
+      campaign: z.string(),
+      term: z.string().optional(),
+      content: z.string().optional(),
+    })
+    .optional(),
   target_audience: z.array(z.string()).optional(),
 });
 
@@ -416,11 +463,11 @@ export const tenantSchema = z.object({
       session_timeout_minutes: z.number().default(60),
     }),
   }),
-  status: z.enum(['active', 'suspended', 'cancelled']),
+  status: z.enum(["active", "suspended", "cancelled"]),
   subscription: z.object({
-    plan: z.enum(['starter', 'professional', 'enterprise']),
+    plan: z.enum(["starter", "professional", "enterprise"]),
     seats: z.number().min(1),
-    billing_cycle: z.enum(['monthly', 'yearly']),
+    billing_cycle: z.enum(["monthly", "yearly"]),
     expires_at: z.date(),
   }),
 });
@@ -431,15 +478,34 @@ export type Tenant = z.infer<typeof tenantSchema>;
 export const activityLogSchema = z.object({
   ...commonFields,
   actor_id: z.string().uuid(),
-  entity_type: z.enum(['lead', 'opportunity', 'contact', 'account', 'campaign', 'user']),
+  entity_type: z.enum([
+    "lead",
+    "opportunity",
+    "contact",
+    "account",
+    "campaign",
+    "user",
+  ]),
   entity_id: z.string().uuid(),
-  action: z.enum(['create', 'update', 'delete', 'convert', 'assign', 'email', 'note']),
+  action: z.enum([
+    "create",
+    "update",
+    "delete",
+    "convert",
+    "assign",
+    "email",
+    "note",
+  ]),
   details: z.object({
-    changes: z.array(z.object({
-      field: z.string(),
-      old_value: z.any(),
-      new_value: z.any(),
-    })).optional(),
+    changes: z
+      .array(
+        z.object({
+          field: z.string(),
+          old_value: z.any(),
+          new_value: z.any(),
+        })
+      )
+      .optional(),
     metadata: z.record(z.string(), z.any()).optional(),
   }),
   ip_address: z.string().optional(),
@@ -453,13 +519,15 @@ export const featureFlagSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   enabled: z.boolean().default(false),
-  rules: z.array(z.object({
-    tenant_ids: z.array(z.string().uuid()).optional(),
-    user_roles: z.array(z.string()).optional(),
-    percentage: z.number().min(0).max(100).optional(),
-    start_date: z.date().optional(),
-    end_date: z.date().optional(),
-  })),
+  rules: z.array(
+    z.object({
+      tenant_ids: z.array(z.string().uuid()).optional(),
+      user_roles: z.array(z.string()).optional(),
+      percentage: z.number().min(0).max(100).optional(),
+      start_date: z.date().optional(),
+      end_date: z.date().optional(),
+    })
+  ),
 });
 
 export type FeatureFlag = z.infer<typeof featureFlagSchema>;
@@ -469,12 +537,23 @@ export const segmentSchema = z.object({
   ...commonFields,
   name: z.string().min(1),
   description: z.string().optional(),
-  entity_type: z.enum(['lead', 'contact', 'account', 'opportunity']),
-  filters: z.array(z.object({
-    field: z.string(),
-    operator: z.enum(['equals', 'not_equals', 'contains', 'not_contains', 'greater_than', 'less_than', 'in', 'not_in']),
-    value: z.any(),
-  })),
+  entity_type: z.enum(["lead", "contact", "account", "opportunity"]),
+  filters: z.array(
+    z.object({
+      field: z.string(),
+      operator: z.enum([
+        "equals",
+        "not_equals",
+        "contains",
+        "not_contains",
+        "greater_than",
+        "less_than",
+        "in",
+        "not_in",
+      ]),
+      value: z.any(),
+    })
+  ),
   owner_id: z.string().uuid(),
 });
 
@@ -487,13 +566,17 @@ export const calendarEventSchema = z.object({
   description: z.string().optional(),
   start_time: z.date(),
   end_time: z.date(),
-  type: z.enum(['meeting', 'call', 'task', 'reminder']),
-  entity_type: z.enum(['lead', 'opportunity', 'contact', 'account']).optional(),
+  type: z.enum(["meeting", "call", "task", "reminder"]),
+  entity_type: z.enum(["lead", "opportunity", "contact", "account"]).optional(),
   entity_id: z.string().uuid().optional(),
-  attendees: z.array(z.object({
-    email: z.string().email(),
-    response_status: z.enum(['pending', 'accepted', 'declined', 'tentative']).optional(),
-  })),
+  attendees: z.array(
+    z.object({
+      email: z.string().email(),
+      response_status: z
+        .enum(["pending", "accepted", "declined", "tentative"])
+        .optional(),
+    })
+  ),
   google_calendar_id: z.string().optional(),
   location: z.string().optional(),
   reminder_minutes: z.number().optional(),
@@ -514,8 +597,8 @@ export const emailSchema = z.object({
   sent_at: z.date(),
   thread_id: z.string(),
   gmail_message_id: z.string(),
-  direction: z.enum(['inbound', 'outbound']),
-  entity_type: z.enum(['lead', 'opportunity', 'contact', 'account']).optional(),
+  direction: z.enum(["inbound", "outbound"]),
+  entity_type: z.enum(["lead", "opportunity", "contact", "account"]).optional(),
   entity_id: z.string().uuid().optional(),
   campaign_id: z.string().uuid().optional(),
   opened_at: z.date().optional(),
@@ -530,29 +613,40 @@ export const workflowSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   trigger: z.object({
-    type: z.enum(['event', 'schedule', 'manual']),
+    type: z.enum(["event", "schedule", "manual"]),
     config: z.object({
       event_type: z.string().optional(), // For event triggers
       cron_expression: z.string().optional(), // For scheduled triggers
     }),
   }),
   enabled: z.boolean().default(true),
-  steps: z.array(z.object({
-    id: z.string(),
-    type: z.enum(['send_email', 'create_task', 'update_field', 'wait', 'condition', 'webhook']),
-    config: z.record(z.string(), z.any()),
-    next_step_id: z.string().optional(),
-    condition_steps: z.record(z.string(), z.string()).optional(), // For condition steps: outcome -> next_step_id
-  })),
+  steps: z.array(
+    z.object({
+      id: z.string(),
+      type: z.enum([
+        "send_email",
+        "create_task",
+        "update_field",
+        "wait",
+        "condition",
+        "webhook",
+      ]),
+      config: z.record(z.string(), z.any()),
+      next_step_id: z.string().optional(),
+      condition_steps: z.record(z.string(), z.string()).optional(), // For condition steps: outcome -> next_step_id
+    })
+  ),
   last_run_at: z.date().optional(),
   next_run_at: z.date().optional(),
   owner_id: z.string().uuid(),
-  metrics: z.object({
-    runs: z.number().default(0),
-    successful_runs: z.number().default(0),
-    failed_runs: z.number().default(0),
-    last_error: z.string().optional(),
-  }).optional(),
+  metrics: z
+    .object({
+      runs: z.number().default(0),
+      successful_runs: z.number().default(0),
+      failed_runs: z.number().default(0),
+      last_error: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type Workflow = z.infer<typeof workflowSchema>;
@@ -562,29 +656,46 @@ export const reportSchema = z.object({
   ...commonFields,
   name: z.string().min(1),
   description: z.string().optional(),
-  type: z.enum(['sales', 'leads', 'activities', 'performance', 'custom']),
+  type: z.enum(["sales", "leads", "activities", "performance", "custom"]),
   query: z.object({
     metrics: z.array(z.string()),
     dimensions: z.array(z.string()),
-    filters: z.array(z.object({
-      field: z.string(),
-      operator: z.enum(['equals', 'not_equals', 'greater_than', 'less_than', 'contains', 'not_contains']),
-      value: z.any(),
-    })).optional(),
-    sort: z.array(z.object({
-      field: z.string(),
-      direction: z.enum(['asc', 'desc']),
-    })).optional(),
+    filters: z
+      .array(
+        z.object({
+          field: z.string(),
+          operator: z.enum([
+            "equals",
+            "not_equals",
+            "greater_than",
+            "less_than",
+            "contains",
+            "not_contains",
+          ]),
+          value: z.any(),
+        })
+      )
+      .optional(),
+    sort: z
+      .array(
+        z.object({
+          field: z.string(),
+          direction: z.enum(["asc", "desc"]),
+        })
+      )
+      .optional(),
     limit: z.number().optional(),
   }),
-  schedule: z.object({
-    enabled: z.boolean().default(false),
-    frequency: z.enum(['daily', 'weekly', 'monthly']).optional(),
-    time: z.string().optional(), // HH:mm
-    day: z.number().optional(), // 0-6 for weekly, 1-31 for monthly
-    recipients: z.array(z.string().email()).optional(),
-    format: z.enum(['pdf', 'csv', 'xlsx']).optional(),
-  }).optional(),
+  schedule: z
+    .object({
+      enabled: z.boolean().default(false),
+      frequency: z.enum(["daily", "weekly", "monthly"]).optional(),
+      time: z.string().optional(), // HH:mm
+      day: z.number().optional(), // 0-6 for weekly, 1-31 for monthly
+      recipients: z.array(z.string().email()).optional(),
+      format: z.enum(["pdf", "csv", "xlsx"]).optional(),
+    })
+    .optional(),
   last_run_at: z.date().optional(),
   owner_id: z.string().uuid(),
 });
@@ -597,25 +708,31 @@ export const taskSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   due_date: z.date().optional(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']),
-  status: z.enum(['pending', 'in_progress', 'completed', 'cancelled']),
-  type: z.enum(['call', 'email', 'meeting', 'follow_up', 'other']),
-  entity_type: z.enum(['lead', 'opportunity', 'contact', 'account']).optional(),
+  priority: z.enum(["low", "medium", "high", "urgent"]),
+  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
+  type: z.enum(["call", "email", "meeting", "follow_up", "other"]),
+  entity_type: z.enum(["lead", "opportunity", "contact", "account"]).optional(),
   entity_id: z.string().uuid().optional(),
   assignee_id: z.string().uuid(),
   workflow_id: z.string().uuid().optional(),
   completed_at: z.date().optional(),
-  reminder: z.object({
-    enabled: z.boolean().default(false),
-    time: z.date().optional(),
-    sent: z.boolean().default(false),
-  }).optional(),
+  reminder: z
+    .object({
+      enabled: z.boolean().default(false),
+      time: z.date().optional(),
+      sent: z.boolean().default(false),
+    })
+    .optional(),
 });
 
 export type Task = z.infer<typeof taskSchema>;
 
 // Integration Schemas
-export const integrationProviderSchema = z.enum(['linkedin', 'gmail', 'google_calendar']);
+export const integrationProviderSchema = z.enum([
+  "linkedin",
+  "gmail",
+  "google_calendar",
+]);
 
 export const integrationSchema = z.object({
   ...commonFields,
@@ -629,7 +746,7 @@ export const integrationSchema = z.object({
     }),
     settings: z.record(z.any()).optional(),
   }),
-  status: z.enum(['active', 'inactive', 'error']),
+  status: z.enum(["active", "inactive", "error"]),
   last_sync: z.date().optional(),
   error: z.string().optional(),
 });
@@ -640,7 +757,7 @@ export type Integration = z.infer<typeof integrationSchema>;
 export const integrationSyncLogSchema = z.object({
   ...commonFields,
   integration_id: z.string().uuid(),
-  status: z.enum(['success', 'error', 'partial']),
+  status: z.enum(["success", "error", "partial"]),
   items_processed: z.number(),
   items_succeeded: z.number(),
   items_failed: z.number(),
@@ -655,20 +772,26 @@ export const dashboardSchema = z.object({
   ...commonFields,
   name: z.string().min(1),
   description: z.string().optional(),
-  layout: z.array(z.object({
-    id: z.string(),
-    type: z.enum(['chart', 'metric', 'table', 'list']),
-    config: z.object({
-      data_source: z.string().optional(),
-      metrics: z.array(z.string()).optional(),
-      filters: z.array(z.object({
-        field: z.string(),
-        operator: z.string(),
-        value: z.any(),
-      })).optional(),
-      refresh_interval: z.number().optional(),
-    }),
-  })),
+  layout: z.array(
+    z.object({
+      id: z.string(),
+      type: z.enum(["chart", "metric", "table", "list"]),
+      config: z.object({
+        data_source: z.string().optional(),
+        metrics: z.array(z.string()).optional(),
+        filters: z
+          .array(
+            z.object({
+              field: z.string(),
+              operator: z.string(),
+              value: z.any(),
+            })
+          )
+          .optional(),
+        refresh_interval: z.number().optional(),
+      }),
+    })
+  ),
   is_default: z.boolean().default(false),
   owner_id: z.string().uuid(),
 });

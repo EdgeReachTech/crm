@@ -1,6 +1,11 @@
-import { Router, Request, Response } from 'express';
-import { LeadController } from '../controllers/lead.controller';
-import { authMiddleware, requireRole, requireSameTenant } from '../middleware/auth';
+import { Router, Request, Response } from "express";
+// import { Request, Response, NextFunction } from 'express';
+import { LeadController } from "../controllers/lead.controller";
+import {
+  authMiddleware,
+  requireRole,
+  requireSameTenant,
+} from "../middleware/auth";
 
 const router = Router();
 const leadController = new LeadController();
@@ -9,46 +14,27 @@ const leadController = new LeadController();
 router.use(authMiddleware);
 
 // Basic CRUD routes
-router.post('/', 
-  requireSameTenant,
-  LeadController.createLeadValidation,
-  (req: Request, res: Response) => leadController.createLead(req, res)
-);
+router.post("/create", leadController.createLead);
 
-router.get('/', 
-  requireSameTenant,
-  LeadController.listLeadsValidation,
-  (req: Request, res: Response) => leadController.listLeads(req, res)
-);
+router.get("/", leadController.listLeads);
 
-router.get('/:id', 
-  requireSameTenant,
-  LeadController.getLeadValidation,
-  (req: Request, res: Response) => leadController.getLead(req, res)
-);
+router.get("/:id", leadController.getLead);
 
-router.put('/:id', 
-  requireSameTenant,
-  LeadController.updateLeadValidation,
-  (req: Request, res: Response) => leadController.updateLead(req, res)
-);
+router.put("/update/:id", leadController.updateLead);
 
-router.delete('/:id', 
-  requireSameTenant,
-  requireRole(['manager']),
-  LeadController.getLeadValidation,
-  (req: Request, res: Response) => leadController.deleteLead(req, res)
-);
+router.delete("/delete/:id", leadController.deleteLead);
 
 // Special operations
-router.patch('/:id/score', 
+router.patch(
+  "/:id/score",
   requireSameTenant,
-  requireRole(['manager']),
+  requireRole(["manager"]),
   LeadController.getLeadValidation,
   (req: Request, res: Response) => leadController.updateLeadScore(req, res)
 );
 
-router.patch('/:id/status', 
+router.patch(
+  "/:id/status",
   requireSameTenant,
   LeadController.getLeadValidation,
   (req: Request, res: Response) => leadController.updateLeadStatus(req, res)
