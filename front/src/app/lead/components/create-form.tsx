@@ -2,11 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { LeadFormData, LeadFormProps } from '@/types/leadTypes';
+import { LeadFormData } from '@/types/leadTypes';
 import { useLeads } from '@/contexts/LeadContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-
 
 export default function LeadForm() {
   const { user } = useAuth();
@@ -103,35 +101,59 @@ export default function LeadForm() {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
+    // Basic Info
     if (!data.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!data.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!data.email.trim() || !/\S+@\S+\.\S+/.test(data.email))
       newErrors.email = 'Valid email is required';
     if (!data.company.trim()) newErrors.company = 'Company is required';
+    if (!data.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!data.title.trim()) newErrors.title = 'Job title is required';
+
+    // Qualification
     if (!data.source) newErrors.source = 'Source is required';
-    if (data.score < 0 || data.score > 100)
+    if (!data.source_details.trim()) newErrors.source_details = 'Source details are required';
+    if (!data.status) newErrors.status = 'Status is required';
+    if (!data.interest_level) newErrors.interest_level = 'Interest level is required';
+    if (!data.qualification_status) newErrors.qualification_status = 'Qualification status is required';
+    // current_stage_id not present in this form; skip
+    if (data.score === null || data.score === undefined || data.score < 0 || data.score > 100)
       newErrors.score = 'Score must be between 0 and 100';
+    if (!data.budget_range.trim()) newErrors.budget_range = 'Budget range is required';
+    if (!data.timeline.trim()) newErrors.timeline = 'Timeline is required';
+    if (!data.pain_points.trim()) newErrors.pain_points = 'Pain points are required';
+    // decision_maker_contact not present in this form; skip
+
+    // Follow-up & Conversion
+    if (!data.last_contacted) newErrors.last_contacted = 'Last contacted date is required';
+    if (!data.next_follow_up) newErrors.next_follow_up = 'Next follow-up date is required';
+    if (data.converted_to_opportunity && !data.conversion_date)
+      newErrors.conversion_date = 'Conversion date is required when converted';
+
+    // Additional
+    if (!data.notes.trim()) newErrors.notes = 'Notes are required';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-    if (leadId && isLoading && !initialData?.first_name) return (
-        <div className="flex items-center justify-center py-12">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
-        </div>
-    );
-    
-    if (error && leadId) return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="text-red-600 text-lg">Error: {error}</div>
+  if (leadId && isLoading && !initialData?.first_name) return (
+      <div className="flex items-center justify-center py-12">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
-    );
+  );
     
-    if (leadId && !isLoading && !initialData) return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="text-lg">No lead found.</div>
-      </div>
-    );
+  if (error && leadId) return (
+    <div className="flex items-center justify-center min-h-64">
+      <div className="text-red-600 text-lg">Error: {error}</div>
+    </div>
+  );
+    
+  if (leadId && !isLoading && !initialData) return (
+    <div className="flex items-center justify-center min-h-64">
+      <div className="text-lg">No lead found.</div>
+    </div>
+  );
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -222,6 +244,7 @@ export default function LeadForm() {
                 type="text"
                 value={data.firstName}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {errors.firstName && (
@@ -238,6 +261,7 @@ export default function LeadForm() {
                 type="text"
                 value={data.lastName}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {errors.lastName && (
@@ -254,6 +278,7 @@ export default function LeadForm() {
                 type="email"
                 value={data.email}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {errors.email && (
@@ -270,6 +295,7 @@ export default function LeadForm() {
                 type="text"
                 value={data.company}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {errors.company && (
@@ -279,28 +305,36 @@ export default function LeadForm() {
 
             <div>
               <label htmlFor="phone" className="mb-1 block text-sm font-medium text-gray-700">
-                Phone
+                Phone *
               </label>
               <input
                 id="phone"
                 type="text"
                 value={data.phone}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.phone && (
+                <small className="text-sm text-red-500">{errors.phone}</small>
+              )}
             </div>
 
             <div>
               <label htmlFor="title" className="mb-1 block text-sm font-medium text-gray-700">
-                Job Title
+                Job Title *
               </label>
               <input
                 id="title"
                 type="text"
                 value={data.title}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.title && (
+                <small className="text-sm text-red-500">{errors.title}</small>
+              )}
             </div>
           </div>
 
@@ -315,6 +349,7 @@ export default function LeadForm() {
                 id="source"
                 value={data.source}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="website">Website</option>
@@ -332,15 +367,19 @@ export default function LeadForm() {
 
             <div>
               <label htmlFor="source_details" className="mb-1 block text-sm font-medium text-gray-700">
-                Source Details
+                Source Details *
               </label>
               <input
                 id="source_details"
                 type="text"
                 value={data.source_details}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.source_details && (
+                <small className="text-sm text-red-500">{errors.source_details}</small>
+              )}
             </div>
 
             <div>
@@ -351,6 +390,7 @@ export default function LeadForm() {
                 id="status"
                 value={data.status}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="new">New</option>
@@ -368,8 +408,12 @@ export default function LeadForm() {
                 id="interest_level"
                 value={data.interest_level}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
+              {errors.interest_level && (
+                <small className="text-sm text-red-500">{errors.interest_level}</small>
+              )}
                 <option value="hot">Hot</option>
                 <option value="warm">Warm</option>
                 <option value="cold">Cold</option>
@@ -384,8 +428,12 @@ export default function LeadForm() {
                 id="qualification_status"
                 value={data.qualification_status}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
+              {errors.qualification_status && (
+                <small className="text-sm text-red-500">{errors.qualification_status}</small>
+              )}
                 <option value="unqualified">Unqualified</option>
                 <option value="marketing_qualified">Marketing Qualified</option>
                 <option value="sales_qualified">Sales Qualified</option>
@@ -403,6 +451,7 @@ export default function LeadForm() {
                 max={100}
                 value={data.score}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {errors.score && (
@@ -412,41 +461,53 @@ export default function LeadForm() {
 
             <div>
               <label htmlFor="budget_range" className="mb-1 block text-sm font-medium text-gray-700">
-                Budget Range
+                Budget Range *
               </label>
               <input
                 id="budget_range"
                 type="text"
                 value={data.budget_range}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.budget_range && (
+                <small className="text-sm text-red-500">{errors.budget_range}</small>
+              )}
             </div>
 
             <div>
               <label htmlFor="timeline" className="mb-1 block text-sm font-medium text-gray-700">
-                Timeline
+                Timeline *
               </label>
               <input
                 id="timeline"
                 type="text"
                 value={data.timeline}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.timeline && (
+                <small className="text-sm text-red-500">{errors.timeline}</small>
+              )}
             </div>
 
             <div>
               <label htmlFor="pain_points" className="mb-1 block text-sm font-medium text-gray-700">
-                Pain Points
+                Pain Points *
               </label>
               <textarea
                 id="pain_points"
                 value={data.pain_points}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
               />
+              {errors.pain_points && (
+                <small className="text-sm text-red-500">{errors.pain_points}</small>
+              )}
             </div>
           </div>
 
@@ -455,28 +516,36 @@ export default function LeadForm() {
           <div className="mb-4 grid gap-3">
             <div>
               <label htmlFor="last_contacted" className="mb-1 block text-sm font-medium text-gray-700">
-                Last Contacted
+                Last Contacted *
               </label>
               <input
                 id="last_contacted"
                 type="date"
                 value={formatDateForInput(data.last_contacted)}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.last_contacted && (
+                <small className="text-sm text-red-500">{errors.last_contacted}</small>
+              )}
             </div>
 
             <div>
               <label htmlFor="next_follow_up" className="mb-1 block text-sm font-medium text-gray-700">
-                Next Follow-Up
+                Next Follow-Up *
               </label>
               <input
                 id="next_follow_up"
                 type="date"
                 value={formatDateForInput(data.next_follow_up)}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              {errors.next_follow_up && (
+                <small className="text-sm text-red-500">{errors.next_follow_up}</small>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -502,8 +571,12 @@ export default function LeadForm() {
                   type="date"
                   value={formatDateForInput(data.conversion_date)}
                   onChange={handleChange}
+                  required
                   className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {errors.conversion_date && (
+                  <small className="text-sm text-red-500">{errors.conversion_date}</small>
+                )}
               </div>
             )}
           </div>
@@ -513,15 +586,19 @@ export default function LeadForm() {
           <div className="grid gap-3">
             <div>
               <label htmlFor="notes" className="mb-1 block text-sm font-medium text-gray-700">
-                Notes
+                Notes *
               </label>
               <textarea
                 id="notes"
                 value={data.notes}
                 onChange={handleChange}
+                required
                 className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows={3}
               />
+              {errors.notes && (
+                <small className="text-sm text-red-500">{errors.notes}</small>
+              )}
             </div>
           </div>
 
