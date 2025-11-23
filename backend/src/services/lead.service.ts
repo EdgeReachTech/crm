@@ -48,7 +48,7 @@ export class LeadService {
       search?: string;
     },
     page = 1,
-    limit = 10
+    limit = 15
   ) {
     try {
       const offset = (page - 1) * limit;
@@ -57,20 +57,39 @@ export class LeadService {
         .select("*, users!owner_id(*)", { count: "exact" })
         .eq("tenant_id", tenantId);
 
+        const statusFilter = Array.isArray(filters.status)
+          ? filters.status          // already array
+          : filters.status
+          ? [filters.status]       // wrap string into array
+          : [];
+
       // Apply filters
       if (filters.status?.length) {
-        query = query.in("status", filters.status);
+        query = query.in("status", statusFilter);
       }
+
+      const sourceFilter = Array.isArray(filters.source) 
+        ? filters.source 
+        : filters.source 
+        ? [filters.source] 
+        : [];
+
       if (filters.source?.length) {
-        query = query.in("source", filters.source);
+        query = query.in("source", sourceFilter);
       }
-      if (filters.owner_id) {
-        query = query.eq("owner_id", filters.owner_id);
-      }
+
       if (filters.search) {
         query = query.or(
-          `firstName.ilike.%${filters.search}%,lastName.ilike.%${filters.search}%,email.ilike.%${filters.search}%,company.ilike.%${filters.search}%`
+          `first_name.ilike.%${filters.search}%,` +
+          `last_name.ilike.%${filters.search}%,` +
+          `email.ilike.%${filters.search}%,` +
+          `company.ilike.%${filters.search}%`
         );
+      }
+                        
+      if((filters as any).interest_level){
+        const { min, max } = (filters as any).interest_level;
+        query = query.gte("score", min).lte("score", max);
       }
 
       const {

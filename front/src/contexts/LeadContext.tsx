@@ -64,6 +64,7 @@ export interface LeadFilters {
   min_score?: number;
   max_score?: number;
   search?: string;
+  score?: any;
   page?: number;
   limit?: number;
   sort_by?: string;
@@ -178,7 +179,7 @@ function leadReducer(state: LeadState, action: LeadAction): LeadState {
     case 'SET_FILTERS':
       return { ...state, filters: { ...state.filters, ...action.payload } };
     case 'CLEAR_FILTERS':
-      return { ...state, filters: {} };
+      return { ...state, filters: { } };
     default:
       return state;
   }
@@ -245,7 +246,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           type: 'SET_ERROR',
           payload: error.message || 'Failed to fetch leads',
         });
-        console.error('fetchLeads error:', error);
       }
     },
     [state.filters]
@@ -267,7 +267,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
         type: 'SET_ERROR',
         payload: error.message || 'Failed to fetch lead',
       });
-      console.error('Error fetching lead:', error);
     }
   }, []);
 
@@ -304,7 +303,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           errorMessage = messages.join(', ');
         }
 
-        // console.error('🔴 FORMATTED ERROR:', errorMessage);
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
         throw new Error(errorMessage);
       } finally {
@@ -345,7 +343,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           errorMessage = messages.join(', ');
         }
 
-        // console.error('🔴 FORMATTED ERROR:', errorMessage);
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
         throw new Error(errorMessage);
       }finally{
@@ -379,7 +376,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           errorMessage = messages.join(', ');
         }
 
-        // console.error('🔴 FORMATTED ERROR:', errorMessage);
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
         throw new Error(errorMessage);
     }

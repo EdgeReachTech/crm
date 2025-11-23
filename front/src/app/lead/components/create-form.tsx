@@ -107,21 +107,21 @@ export default function LeadForm() {
     if (!data.email.trim() || !/\S+@\S+\.\S+/.test(data.email))
       newErrors.email = 'Valid email is required';
     if (!data.company.trim()) newErrors.company = 'Company is required';
-    if (!data.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!data.title.trim()) newErrors.title = 'Job title is required';
+    if (!data.phone?.trim()) newErrors.phone = 'Phone is required';
+    if (!data.title?.trim()) newErrors.title = 'Job title is required';
 
     // Qualification
     if (!data.source) newErrors.source = 'Source is required';
-    if (!data.source_details.trim()) newErrors.source_details = 'Source details are required';
+    if (!data.source_details?.trim()) newErrors.source_details = 'Source details are required';
     if (!data.status) newErrors.status = 'Status is required';
     if (!data.interest_level) newErrors.interest_level = 'Interest level is required';
     if (!data.qualification_status) newErrors.qualification_status = 'Qualification status is required';
     // current_stage_id not present in this form; skip
     if (data.score === null || data.score === undefined || data.score < 0 || data.score > 100)
       newErrors.score = 'Score must be between 0 and 100';
-    if (!data.budget_range.trim()) newErrors.budget_range = 'Budget range is required';
-    if (!data.timeline.trim()) newErrors.timeline = 'Timeline is required';
-    if (!data.pain_points.trim()) newErrors.pain_points = 'Pain points are required';
+    if (!data.budget_range?.trim()) newErrors.budget_range = 'Budget range is required';
+    if (!data.timeline?.trim()) newErrors.timeline = 'Timeline is required';
+    if (!data.pain_points?.trim()) newErrors.pain_points = 'Pain points are required';
     // decision_maker_contact not present in this form; skip
 
     // Follow-up & Conversion
@@ -131,7 +131,7 @@ export default function LeadForm() {
       newErrors.conversion_date = 'Conversion date is required when converted';
 
     // Additional
-    if (!data.notes.trim()) newErrors.notes = 'Notes are required';
+    if (!data.notes?.trim()) newErrors.notes = 'Notes are required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;

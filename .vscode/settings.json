@@ -1,0 +1,26 @@
+// {
+//     "editor.codeActionsOnSave": {
+
+//     }
+// }
+
+{
+  "editor.codeActionsOnSave": {},
+  "editor.formatOnSave": false,
+  "typescript.suggest.autoImports": true,
+  "javascript.suggest.autoImports": true,
+  "tailwindCSS.includeLanguages": {
+    "typescript": "html",
+    "typescriptreact": "html"
+  },
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
