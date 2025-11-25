@@ -54,7 +54,9 @@ function DashboardContent() {
     error, 
     filters: contextFilters,
     setFilters,
-    clearFilters 
+    clearFilters,
+    leadstatistics,
+    statistics
   } = useLeads();
   
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,38 +75,41 @@ function DashboardContent() {
 
   const stats = [
     {
-      name: 'Total Leads',
-      value: pagination?.total?.toString() || '0',
-      change: '+12%',
-      changeType: 'positive' as const,
+      name: "Total Leads",
+      value: statistics.totalLeads ?? 0,
+      change: statistics.monthOverMonth.leads || "0%",
+      changeType: statistics.monthOverMonth.leads.startsWith("-")
+        ? "negative"
+        : "positive",
       icon: UsersIcon,
-      color: 'text-blue-600 dark:text-blue-400',
+      color: "text-blue-600 dark:text-blue-400",
     },
     {
-      name: 'Active Opportunities',
-      value: '89',
-      change: '+8%',
-      changeType: 'positive' as const,
+      name: "Active Opportunities",
+      value: statistics.activeOpportunities ?? 0,
+      change: "",
+      changeType: "positive",
       icon: ChartBarIcon,
-      color: 'text-green-600 dark:text-green-400',
+      color: "text-green-600 dark:text-green-400",
     },
     {
-      name: 'Companies',
-      value: '45',
-      change: '+3%',
-      changeType: 'positive' as const,
+      name: "Companies",
+      value: statistics.totalCompanies ?? 0,
+      change: "",
+      changeType: "positive",
       icon: BuildingOfficeIcon,
-      color: 'text-purple-600 dark:text-purple-400',
+      color: "text-purple-600 dark:text-purple-400",
     },
     {
-      name: 'Contacts',
-      value: '234',
-      change: '+15%',
-      changeType: 'positive' as const,
+      name: "Contacts",
+      value: statistics.totalContacts ?? 0,
+      change: "",
+      changeType: "positive",
       icon: PhoneIcon,
-      color: 'text-orange-600 dark:text-orange-400',
+      color: "text-orange-600 dark:text-orange-400",
     },
   ];
+
 
   const filterOptions = {
     sources: ['Website', 'Referral', 'Social Media', 'Cold Call', 'Email Campaign', 'Event'],
@@ -116,6 +121,7 @@ function DashboardContent() {
   // Initial load
   useEffect(() => {
     fetchLeads({ page: 1 });
+    leadstatistics()
   }, []);
 
   // Fetch leads when page changes
@@ -133,6 +139,7 @@ function DashboardContent() {
       page: currentPage, 
       ...filtersToSend 
     });
+    leadstatistics()
   }, [currentPage]);
 
   // Debounced search effect
@@ -203,7 +210,8 @@ function DashboardContent() {
         page: 1, 
         ...filtersToSend 
       });
-    // }
+      
+      leadstatistics();
   }, [localFilters, setFilters, fetchLeads]);
 
   const handleSearchChange = (value: string) => {
@@ -257,56 +265,75 @@ function DashboardContent() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header Section */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h2 className="mb-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-            Welcome back, {user?.first_name}!
-          </h2>
-          <p className="text-lg text-neutral-600 dark:text-neutral-400">
-            Here&apos;s what&apos;s happening with your sales pipeline today.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => (window.location.href = '/lead/create-lead')}
-            leftIcon={<PlusIcon className="h-5 w-5" />}
-          >
-            Add Lead
-          </Button>
-        </div>
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      {/* Left Section */}
+      <div className="text-center md:text-left">
+        <h2 className="mb-2 text-2xl md:text-3xl font-bold text-neutral-900 dark:text-neutral-100">
+          Welcome back, {user?.first_name}!
+        </h2>
+        <p className="text-md md:text-lg text-neutral-600 dark:text-neutral-400">
+          Here&apos;s what&apos;s happening with your sales pipeline today.
+        </p>
       </div>
 
+      {/* Right Section */}
+      <div className="flex justify-center md:justify-end">
+        <Button
+          variant="outline"
+          onClick={() => (window.location.href = "/lead/create-lead")}
+          leftIcon={<PlusIcon className="h-5 w-5" />}
+          className="w-full md:w-auto"
+        >
+          Add Lead
+        </Button>
+      </div>
+    </div>
+
+
       {/* Stats Grid */}
-      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
         {stats.map((stat, index) => (
           <Card
             key={index}
-            className="transition-all duration-200 hover:shadow-lg hover:scale-105"
+            className="transition-all duration-300 hover:shadow-lg hover:scale-[1.02] border-neutral-200 dark:border-neutral-700 bg-gradient-to-br from-white to-neutral-50 dark:from-neutral-800 dark:to-neutral-900 overflow-hidden"
           >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="mb-1 text-sm font-medium text-neutral-600 dark:text-neutral-400">
+            <CardContent className="p-4 sm:p-6 relative">
+              {/* Background accent */}
+              <div className={`absolute top-0 right-0 w-16 h-16 ${stat.color} bg-opacity-5 rounded-full -translate-y-8 translate-x-8`}></div>
+              
+              <div className="flex items-start justify-between relative z-10">
+                <div className="flex-1 min-w-0">
+                  <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 sm:text-3xl lg:text-2xl xl:text-3xl truncate mb-1">
+                    {stat.value}
+                  </p>
+                  <p className="text-sm font-medium text-neutral-600 dark:text-neutral-400 truncate mb-2">
                     {stat.name}
                   </p>
-                  <div className="flex items-baseline">
-                    <p className="text-3xl font-bold text-neutral-900 dark:text-neutral-100">
-                      {stat.value}
-                    </p>
-                    <p
-                      className={`ml-2 text-sm font-medium ${
-                        stat.changeType === 'positive'
-                          ? 'text-green-600 dark:text-green-400'
-                          : 'text-red-600 dark:text-red-400'
-                      }`}
-                    >
-                      {stat.change}
-                    </p>
-                  </div>
+                  {stat.change && (
+                    <div className="flex items-center">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          stat.changeType === 'positive'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}
+                      >
+                        {stat.changeType === 'positive' ? (
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        {stat.change}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className={`rounded-full p-3 ${stat.color} bg-opacity-10`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                <div className={`rounded-xl p-2 sm:p-3 ${stat.color} bg-opacity-10 flex-shrink-0 ml-3`}>
+                  <stat.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.color}`} />
                 </div>
               </div>
             </CardContent>

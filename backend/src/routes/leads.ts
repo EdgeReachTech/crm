@@ -18,9 +18,11 @@ router.post("/create", leadController.createLead);
 
 router.get("/", leadController.listLeads);
 
+router.get("/stats", leadController.leadStatistics);
 router.get("/:id", leadController.getLead);
 
 router.put("/update/:id", leadController.updateLead);
+
 
 router.delete("/delete/:id", leadController.deleteLead);
 

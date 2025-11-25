@@ -12,7 +12,8 @@ import {
   CalendarIcon,
   ChartBarIcon,
   UserCircleIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  ArrowLeftIcon
 } from "@heroicons/react/24/outline";
 
 export default function LeadPage() {
@@ -85,7 +86,9 @@ export default function LeadPage() {
     <div className="max-w-6xl mx-auto px-4 py-8">
       <button onClick={() => {
           router.push("/dashboard")
-        }} className='border border-black/50 px-4 py-2 mb-4'>Back to dashboard</button>
+        }} className='text-black font-bold border p-2 rounded-full border-blue-500 mb-4 ml-4'>
+          <ArrowLeftIcon className='w-4 h-4'/>
+        </button>
       {/* Header Section */}
       <div className="mb-8">
         <div className="flex items-center justify-between">

@@ -115,6 +115,66 @@ export class LeadService {
     }
   }
 
+  async leadsStatistics(tenantId: string) {
+    const supabaseClient = supabase;
+
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const { data: leads, error } = await supabaseClient
+      .from("leads")
+      .select("*")
+      .eq("tenant_id", tenantId);
+
+    if (error) throw error;
+
+    // Base totals
+    const totalLeads = leads.length;
+
+    const totalCompanies = new Set(
+      leads
+        .map((l: any) => l.company?.trim())
+        .filter((c: any) => c)
+    ).size;
+
+    const totalContacts = new Set(
+      leads
+        .map((l: any) => l.phone?.trim())
+        .filter((p: any) => p)
+    ).size;
+
+    const activeOpportunities = leads.filter(
+      (l: any) => l.converted_to_opportunity
+    ).length;
+
+    // Month-over-month change
+    const leadsThisMonth = leads.filter(
+      (l: any) => new Date(l.created_at) >= startOfThisMonth
+    ).length;
+
+    const leadsLastMonth = leads.filter(
+      (l: any) =>
+        new Date(l.created_at) >= startOfLastMonth &&
+        new Date(l.created_at) <= endOfLastMonth
+    ).length;
+
+    const leadsChangePct = leadsLastMonth === 0
+      ? leadsThisMonth > 0 ? 100 : 0
+      : ((leadsThisMonth - leadsLastMonth) / leadsLastMonth) * 100;
+
+    return {
+      totalLeads,
+      totalCompanies,
+      totalContacts,
+      activeOpportunities,
+      monthOverMonth: {
+        leads: leadsChangePct.toFixed(2) + "%",
+      },
+    };
+  }
+
   async updateLead(leadId: string, tenantId: string, updates: Partial<Lead>) {
 
     try {

@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LeadFormData } from '@/types/leadTypes';
 import { useLeads } from '@/contexts/LeadContext';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function LeadForm() {
   const { user } = useAuth();
@@ -223,12 +224,14 @@ export default function LeadForm() {
     <div className="mx-auto max-w-2xl">
       <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
        <div className='flex items-center justify-between'>
+        <button onClick={() => {
+          router.push("/dashboard")
+        }} className='text-black font-bold border p-2 rounded-full border-blue-500 mb-4'>
+            <ArrowLeftIcon className='w-4 h-4'/>
+        </button>
          <h2 className="mb-4 text-2xl font-semibold">
           {initialData?.first_name ? 'Edit Lead' : 'Create New Lead'}
         </h2>
-        <button onClick={() => {
-          router.push("/dashboard")
-        }} className='border border-black/50 px-4 py-2'>Back to dashboard</button>
        </div>
 
         <form onSubmit={handleSubmit}>

@@ -316,6 +316,25 @@ export class LeadController {
     }
   };
 
+  leadStatistics = async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.tenant_id) {
+        throw new ApiError("Unauthorized", "Missing tenant context");
+      }
+
+      const results = await this.leadService.leadsStatistics(req.user.tenant_id);
+
+      res.json({ success: true, data: results });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "InternalServerError",
+        message: "An unexpected error occurred",
+      });
+    }
+  };
+
+
   updateLeadScore = async (req: Request, res: Response) => {
     try {
       if (!req.user?.tenant_id) {
