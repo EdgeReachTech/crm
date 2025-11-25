@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { LeadFormData } from '@/types/leadTypes';
 import { useLeads } from '@/contexts/LeadContext';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function LeadForm() {
   const { user } = useAuth();
@@ -107,21 +108,21 @@ export default function LeadForm() {
     if (!data.email.trim() || !/\S+@\S+\.\S+/.test(data.email))
       newErrors.email = 'Valid email is required';
     if (!data.company.trim()) newErrors.company = 'Company is required';
-    if (!data.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!data.title.trim()) newErrors.title = 'Job title is required';
+    if (!data.phone?.trim()) newErrors.phone = 'Phone is required';
+    if (!data.title?.trim()) newErrors.title = 'Job title is required';
 
     // Qualification
     if (!data.source) newErrors.source = 'Source is required';
-    if (!data.source_details.trim()) newErrors.source_details = 'Source details are required';
+    if (!data.source_details?.trim()) newErrors.source_details = 'Source details are required';
     if (!data.status) newErrors.status = 'Status is required';
     if (!data.interest_level) newErrors.interest_level = 'Interest level is required';
     if (!data.qualification_status) newErrors.qualification_status = 'Qualification status is required';
     // current_stage_id not present in this form; skip
     if (data.score === null || data.score === undefined || data.score < 0 || data.score > 100)
       newErrors.score = 'Score must be between 0 and 100';
-    if (!data.budget_range.trim()) newErrors.budget_range = 'Budget range is required';
-    if (!data.timeline.trim()) newErrors.timeline = 'Timeline is required';
-    if (!data.pain_points.trim()) newErrors.pain_points = 'Pain points are required';
+    if (!data.budget_range?.trim()) newErrors.budget_range = 'Budget range is required';
+    if (!data.timeline?.trim()) newErrors.timeline = 'Timeline is required';
+    if (!data.pain_points?.trim()) newErrors.pain_points = 'Pain points are required';
     // decision_maker_contact not present in this form; skip
 
     // Follow-up & Conversion
@@ -131,7 +132,7 @@ export default function LeadForm() {
       newErrors.conversion_date = 'Conversion date is required when converted';
 
     // Additional
-    if (!data.notes.trim()) newErrors.notes = 'Notes are required';
+    if (!data.notes?.trim()) newErrors.notes = 'Notes are required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -223,12 +224,14 @@ export default function LeadForm() {
     <div className="mx-auto max-w-2xl">
       <div className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
        <div className='flex items-center justify-between'>
+        <button onClick={() => {
+          router.push("/dashboard")
+        }} className='text-black font-bold border p-2 rounded-full border-blue-500 mb-4'>
+            <ArrowLeftIcon className='w-4 h-4'/>
+        </button>
          <h2 className="mb-4 text-2xl font-semibold">
           {initialData?.first_name ? 'Edit Lead' : 'Create New Lead'}
         </h2>
-        <button onClick={() => {
-          router.push("/dashboard")
-        }} className='border border-black/50 px-4 py-2'>Back to dashboard</button>
        </div>
 
         <form onSubmit={handleSubmit}>

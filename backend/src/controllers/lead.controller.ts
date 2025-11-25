@@ -171,12 +171,25 @@ export class LeadController {
         throw new ApiError("Unauthorized", "Missing tenant context");
       }
 
-      const filters = {
-        status: req.query.status as string[],
-        source: req.query.source as string[],
-        owner_id: req.query.owner_id as string,
+      const scoreRanges: Record<string, [number, number]> = {
+        High: [70, 100],
+        Medium: [40, 69],
+        Low: [0, 39],
+      };
+
+     const filters: any = {
+        status: req.query.status as string,
+        source: req.query.source as string,
+        owner_id: req.query.owner as string, // Map 'owner' to 'owner_id'
         search: req.query.search as string,
       };
+
+      // Handle score category → numeric range
+      const category = req.query.score as string;
+      if (category && scoreRanges[category]) {
+        const [min, max] = scoreRanges[category];
+        filters.interest_level = { min, max }; 
+      }
 
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 15;
@@ -185,7 +198,7 @@ export class LeadController {
         req.user.tenant_id,
         filters,
         page,
-        limit
+        limit,
       );
 
       const resultObject = {
@@ -302,6 +315,25 @@ export class LeadController {
       }
     }
   };
+
+  leadStatistics = async (req: Request, res: Response) => {
+    try {
+      if (!req.user?.tenant_id) {
+        throw new ApiError("Unauthorized", "Missing tenant context");
+      }
+
+      const results = await this.leadService.leadsStatistics(req.user.tenant_id);
+
+      res.json({ success: true, data: results });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: "InternalServerError",
+        message: "An unexpected error occurred",
+      });
+    }
+  };
+
 
   updateLeadScore = async (req: Request, res: Response) => {
     try {

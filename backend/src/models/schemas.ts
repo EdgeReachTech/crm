@@ -85,7 +85,6 @@ export const updateProfileSchema = z.object({
 });
 
 // Lead Schema - Updated for new sales CRM structure
-// Lead Schema - Updated for new sales CRM structure
 export const leadSchema = z.object({
   ...commonFields,
   first_name: z.string().min(1),
@@ -94,9 +93,6 @@ export const leadSchema = z.object({
   company: z.string().min(1),
   phone: z.string().optional(),
   title: z.string().optional(),
-  // source: z.enum(['website', 'linkedin', 'referral', 'cold_outreach', 'event', 'partner', 'other']),
-  // source_details: z.string().optional(),
-  // title: z.string().optional(),
   source: z.enum(['website', 'linkedin', 'referral', 'cold_outreach', 'event', 'partner', 'other']),
   source_details: z.string().optional(),
   status: z.enum(['new', 'contacted', 'qualified', 'unqualified']),
@@ -115,7 +111,6 @@ export const leadSchema = z.object({
   owner_id: z.string().uuid(),
   notes: z.string().optional(),
   last_contacted: z.string().transform(str => new Date(str)).optional(),
-  // last_contacted: z.string().transform(str => new Date(str)).optional(),
 });
 
 export type Lead = z.infer<typeof leadSchema>;

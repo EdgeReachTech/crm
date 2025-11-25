@@ -64,6 +64,7 @@ export interface LeadFilters {
   min_score?: number;
   max_score?: number;
   search?: string;
+  score?: any;
   page?: number;
   limit?: number;
   sort_by?: string;
@@ -85,6 +86,15 @@ interface LeadState {
   isLoading: boolean;
   error: string | null;
   filters: LeadFilters;
+  statistics: {
+    totalLeads: number,
+    totalCompanies: number,
+    totalContacts: number,
+    activeOpportunities: number,
+    monthOverMonth: {
+      leads: string
+    }
+  }
 }
 
 // Actions
@@ -97,7 +107,8 @@ type LeadAction =
   | { type: 'UPDATE_LEAD'; payload: Lead }
   | { type: 'DELETE_LEAD'; payload: string }
   | { type: 'SET_FILTERS'; payload: LeadFilters }
-  | { type: 'CLEAR_FILTERS' };
+  | { type: 'CLEAR_FILTERS' }
+  | { type: 'ADD_STATISTICS'; payload: any }
 
 // Initial state
 const initialState: LeadState = {
@@ -115,6 +126,16 @@ const initialState: LeadState = {
   error: null,
   
   filters: {},
+
+  statistics: {
+    totalLeads: 0,
+    totalCompanies: 0,
+    totalContacts: 0,
+    activeOpportunities: 0,
+    monthOverMonth:{
+      leads: ""
+    }  
+  }
 };
 
 // Reducer
@@ -138,6 +159,8 @@ function leadReducer(state: LeadState, action: LeadAction): LeadState {
         isLoading: false,
         error: null,
       };
+    case "ADD_STATISTICS":
+      return { ...state, statistics: action.payload };
     case 'SET_CURRENT_LEAD':
       return { ...state, currentLead: action.payload, isLoading: false };
     case 'ADD_LEAD':
@@ -178,7 +201,7 @@ function leadReducer(state: LeadState, action: LeadAction): LeadState {
     case 'SET_FILTERS':
       return { ...state, filters: { ...state.filters, ...action.payload } };
     case 'CLEAR_FILTERS':
-      return { ...state, filters: {} };
+      return { ...state, filters: { } };
     default:
       return state;
   }
@@ -199,6 +222,7 @@ interface LeadContextType extends LeadState {
   clearFilters: () => void;
   clearError: () => void;
   clearCurrentLead: () => void;
+  leadstatistics: () => void;
 }
 
 const LeadContext = createContext<LeadContextType | undefined>(undefined);
@@ -245,7 +269,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           type: 'SET_ERROR',
           payload: error.message || 'Failed to fetch leads',
         });
-        console.error('fetchLeads error:', error);
       }
     },
     [state.filters]
@@ -267,7 +290,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
         type: 'SET_ERROR',
         payload: error.message || 'Failed to fetch lead',
       });
-      console.error('Error fetching lead:', error);
     }
   }, []);
 
@@ -304,7 +326,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           errorMessage = messages.join(', ');
         }
 
-        // console.error('🔴 FORMATTED ERROR:', errorMessage);
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
         throw new Error(errorMessage);
       } finally {
@@ -345,7 +366,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           errorMessage = messages.join(', ');
         }
 
-        // console.error('🔴 FORMATTED ERROR:', errorMessage);
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
         throw new Error(errorMessage);
       }finally{
@@ -354,6 +374,30 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
     },
     []
   );
+
+  const leadstatistics = useCallback(async () => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      const response = await apiClient.get("/api/v1/leads/stats");
+
+      // Store statistics in context
+      dispatch({
+        type: "ADD_STATISTICS",
+        payload: response.data, // <-- backend returns { success, data }
+      });
+
+    } catch (error: any) {
+      dispatch({
+        type: 'SET_ERROR',
+        payload: error.message || 'Failed to fetch lead statistics',
+      });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, []);
+
 
   const deleteLead = useCallback(async (id: string) => {
     try {
@@ -379,7 +423,6 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           errorMessage = messages.join(', ');
         }
 
-        // console.error('🔴 FORMATTED ERROR:', errorMessage);
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
         throw new Error(errorMessage);
     }
@@ -431,6 +474,7 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
     clearFilters,
     clearError,
     clearCurrentLead,
+    leadstatistics,
   };
 
   return <LeadContext.Provider value={value}>{children}</LeadContext.Provider>;

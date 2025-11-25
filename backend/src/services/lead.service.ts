@@ -48,7 +48,7 @@ export class LeadService {
       search?: string;
     },
     page = 1,
-    limit = 10
+    limit = 15
   ) {
     try {
       const offset = (page - 1) * limit;
@@ -57,20 +57,39 @@ export class LeadService {
         .select("*, users!owner_id(*)", { count: "exact" })
         .eq("tenant_id", tenantId);
 
+        const statusFilter = Array.isArray(filters.status)
+          ? filters.status          // already array
+          : filters.status
+          ? [filters.status]       // wrap string into array
+          : [];
+
       // Apply filters
       if (filters.status?.length) {
-        query = query.in("status", filters.status);
+        query = query.in("status", statusFilter);
       }
+
+      const sourceFilter = Array.isArray(filters.source) 
+        ? filters.source 
+        : filters.source 
+        ? [filters.source] 
+        : [];
+
       if (filters.source?.length) {
-        query = query.in("source", filters.source);
+        query = query.in("source", sourceFilter);
       }
-      if (filters.owner_id) {
-        query = query.eq("owner_id", filters.owner_id);
-      }
+
       if (filters.search) {
         query = query.or(
-          `firstName.ilike.%${filters.search}%,lastName.ilike.%${filters.search}%,email.ilike.%${filters.search}%,company.ilike.%${filters.search}%`
+          `first_name.ilike.%${filters.search}%,` +
+          `last_name.ilike.%${filters.search}%,` +
+          `email.ilike.%${filters.search}%,` +
+          `company.ilike.%${filters.search}%`
         );
+      }
+                        
+      if((filters as any).interest_level){
+        const { min, max } = (filters as any).interest_level;
+        query = query.gte("score", min).lte("score", max);
       }
 
       const {
@@ -94,6 +113,66 @@ export class LeadService {
       console.error("Error in listLeads:", error);
       throw new ApiError("LeadListError", "Failed to list leads", error);
     }
+  }
+
+  async leadsStatistics(tenantId: string) {
+    const supabaseClient = supabase;
+
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+    const { data: leads, error } = await supabaseClient
+      .from("leads")
+      .select("*")
+      .eq("tenant_id", tenantId);
+
+    if (error) throw error;
+
+    // Base totals
+    const totalLeads = leads.length;
+
+    const totalCompanies = new Set(
+      leads
+        .map((l: any) => l.company?.trim())
+        .filter((c: any) => c)
+    ).size;
+
+    const totalContacts = new Set(
+      leads
+        .map((l: any) => l.phone?.trim())
+        .filter((p: any) => p)
+    ).size;
+
+    const activeOpportunities = leads.filter(
+      (l: any) => l.converted_to_opportunity
+    ).length;
+
+    // Month-over-month change
+    const leadsThisMonth = leads.filter(
+      (l: any) => new Date(l.created_at) >= startOfThisMonth
+    ).length;
+
+    const leadsLastMonth = leads.filter(
+      (l: any) =>
+        new Date(l.created_at) >= startOfLastMonth &&
+        new Date(l.created_at) <= endOfLastMonth
+    ).length;
+
+    const leadsChangePct = leadsLastMonth === 0
+      ? leadsThisMonth > 0 ? 100 : 0
+      : ((leadsThisMonth - leadsLastMonth) / leadsLastMonth) * 100;
+
+    return {
+      totalLeads,
+      totalCompanies,
+      totalContacts,
+      activeOpportunities,
+      monthOverMonth: {
+        leads: leadsChangePct.toFixed(2) + "%",
+      },
+    };
   }
 
   async updateLead(leadId: string, tenantId: string, updates: Partial<Lead>) {
